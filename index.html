@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silly Circus of Confused Words</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    
+    <!-- Google Fonts for a fun, circus-like feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;700&family=Lobster&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles for the circus theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            /* Animated background to simulate a circus tent */
+            background-image:
+                repeating-linear-gradient(45deg, #f87171 0, #f87171 40px, #fef2f2 40px, #fef2f2 80px);
+            animation: slide 60s linear infinite;
+        }
+
+        .animation-paused {
+            animation: none !important;
+        }
+
+        @keyframes slide {
+            from { background-position: 0 0; }
+            to { background-position: -1000px 0; }
+        }
+
+        /* Custom fonts */
+        .font-circus { font-family: 'Lobster', cursive; }
+        .font-spooky { font-family: 'Creepster', cursive; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.5s infinite;
+        }
+
+        .tear {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #60a5fa;
+            border-radius: 50%;
+            opacity: 0;
+            animation: fall 1s linear;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        
+        .speech-bubble {
+            position: relative;
+            background: #f3f4f6; /* bg-gray-100 */
+            border-radius: .4em;
+        }
+
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border: 20px solid transparent;
+            border-top-color: #f3f4f6;
+            border-bottom: 0;
+            border-left: 0;
+            margin-left: -10px;
+            margin-bottom: -20px;
+        }
+        
+        #cheer-meter-fill {
+            transition: height 0.5s ease-out, background-color 0.5s ease;
+        }
+        
+        .emoji-image {
+            font-size: 8rem; /* Large emoji size */
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- NEW: Home button, hidden by default -->
+    <button id="home-button" class="hidden fixed top-4 left-4 z-50 bg-white/80 backdrop-blur-sm text-gray-800 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-white transition-all">
+        Home 🏠
+    </button>
+    <button id="toggle-animation-button" class="fixed top-4 right-4 z-50 bg-white/80 backdrop-blur-sm text-gray-800 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-white transition-all">
+        Pause Background ⏸️
+    </button>
+
+    <div id="game-container" class="w-full max-w-5xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
+
+        <!-- ====================================================== -->
+        <!-- START SCREEN (NOW WITH GAME MODES) -->
+        <!-- ====================================================== -->
+        <div id="start-screen" class="p-8 md:p-12 text-center">
+            <h1 class="font-circus text-4xl md:text-6xl text-red-600 drop-shadow-lg">Silly Circus of Confused Words!</h1>
+            <div class="emoji-image mx-auto my-6 h-48 w-48 bg-red-100 rounded-full shadow-lg">🎩</div>
+            <p class="text-gray-700 text-lg md:text-xl mb-6 max-w-2xl mx-auto">
+                Welcome to the Silly Circus! Choose your challenge below.
+            </p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                <button id="practice-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300 w-full md:w-auto">
+                    Practice Tent <br><span class="text-sm font-normal">(10 Questions)</span>
+                </button>
+                <button id="main-event-button" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300 w-full md:w-auto">
+                    The Main Event <br><span class="text-sm font-normal">(All Questions + Boss)</span>
+                </button>
+            </div>
+             <button id="prize-wall-button" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+                Prize Wall 🎟️
+            </button>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- NEW: PRIZE WALL SCREEN -->
+        <!-- ====================================================== -->
+        <div id="prize-wall-screen" class="hidden p-8 md:p-12 text-center">
+             <h1 class="font-circus text-4xl md:text-6xl text-blue-600 drop-shadow-lg">Prize Wall</h1>
+             <p class="text-gray-700 text-lg my-4">Spend your tickets to unlock new boss opponents!</p>
+             <div class="mb-6 text-2xl font-bold bg-yellow-100 border-2 border-yellow-400 rounded-lg p-2 inline-block">
+                Tickets: <span id="ticket-counter">0</span> 🎟️
+             </div>
+             <div id="prize-container" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                 <!-- Prize items will be generated here by JS -->
+             </div>
+             <button id="back-to-menu-button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+                 Back to Main Menu
+             </button>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- GAME SCREEN -->
+        <!-- ====================================================== -->
+        <div id="game-screen" class="hidden p-6 md:p-8">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Main Game Area -->
+                <div class="flex-grow">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <div class="text-lg font-bold text-gray-700">Question: <span id="question-number">1</span> / <span id="total-questions">10</span></div>
+                        <div class="text-lg font-bold text-yellow-600">Score: <span id="score">0</span></div>
+                    </div>
+                    
+                    <div class="flex justify-center items-center gap-4 mb-6 p-3 bg-red-100 rounded-lg">
+                        <button id="clue-coin-button" class="flex items-center gap-2 bg-blue-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all">
+                            <span>Clue Coin 🪙</span>
+                            <span id="clue-coins" class="font-bold bg-white text-blue-600 rounded-full px-2">0</span>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-inner mb-6">
+                        <p id="question-text" class="text-xl md:text-2xl text-gray-800 text-center leading-relaxed"></p>
+                    </div>
+                    
+                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+                
+                <!-- Applause-O-Meter -->
+                <div id="cheer-meter-container" class="w-full md:w-24 flex flex-col items-center bg-gray-200 p-3 rounded-lg shadow-inner">
+                    <h3 class="font-bold text-gray-700 mb-2 text-center">Applause-O-Meter</h3>
+                    <div class="w-12 h-64 bg-gray-300 rounded-full overflow-hidden border-2 border-gray-400 flex flex-col-reverse">
+                        <div id="cheer-meter-fill" class="w-full bg-yellow-400" style="height: 0%;"></div>
+                    </div>
+                    <div class="text-2xl mt-2">👏</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- BOSS BATTLE SCREEN -->
+        <!-- ====================================================== -->
+        <div id="boss-screen" class="hidden p-6 md:p-8 text-center bg-black/80">
+             <h2 class="font-spooky text-5xl md:text-7xl text-red-500 mb-4 drop-shadow-lg">FINAL BATTLE!</h2>
+             <p class="text-white text-lg mb-6">Your word power vs. the Sad Clown's tears!</p>
+             <div id="battle-arena" class="relative max-w-lg mx-auto p-4 bg-gray-700 rounded-lg border-4 border-yellow-400">
+                 <div id="boss-emoji" class="emoji-image mx-auto mb-4 h-64 w-64 bg-gray-800 rounded-full shadow-lg">🤡</div>
+                 <div id="tear-container" class="absolute top-0 left-0 w-full h-full"></div>
+                
+                 <div class="flex justify-between gap-4 text-white">
+                     <div class="w-1/2">
+                         <h3 class="font-bold text-green-400">YOUR POWER</h3>
+                         <div class="w-full bg-gray-600 rounded-full h-8 border-2 border-green-500">
+                             <div id="player-health-bar" class="bg-green-500 h-full rounded-full" style="width: 100%;"></div>
+                         </div>
+                         <p id="player-power" class="text-3xl font-bold mt-2">0</p>
+                     </div>
+                     <div class="w-1/2">
+                         <h3 class="font-bold text-red-400">BOSS HEALTH</h3>
+                         <div class="w-full bg-gray-600 rounded-full h-8 border-2 border-red-500">
+                             <div id="boss-health-bar" class="bg-red-500 h-full rounded-full" style="width: 100%;"></div>
+                         </div>
+                         <p id="boss-health" class="text-3xl font-bold mt-2">0</p>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- END SCREEN -->
+        <!-- ====================================================== -->
+        <div id="end-screen" class="hidden p-8 md:p-12 text-center">
+            <div id="end-score-view">
+                <h1 id="end-title" class="font-circus text-5xl md:text-7xl text-yellow-500 drop-shadow-lg mb-4">Congratulations!</h1>
+                <p id="end-message" class="text-gray-700 text-xl mb-2">You've conquered the circus of confused words!</p>
+                <p class="text-2xl font-bold mb-4">Final Score: <span id="final-score"></span></p>
+                <p class="text-xl font-bold mb-8 text-yellow-600">Tickets Earned: <span id="tickets-earned"></span> 🎟️</p>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <button id="play-again-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        Play Again
+                    </button>
+                    <button id="review-button" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        Review Mistakes
+                    </button>
+                </div>
+                 <button id="main-menu-button" class="mt-6 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+                    Main Menu
+                </button>
+            </div>
+            <div id="end-review-view" class="hidden text-left">
+                <h2 class="font-circus text-4xl text-center text-blue-600 mb-6">Your Mistakes</h2>
+                <div id="review-container" class="space-y-4 max-h-80 overflow-y-auto p-4 bg-gray-100 rounded-lg"></div>
+                <button id="back-to-score-button" class="w-full mt-6 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-6 rounded-lg text-lg shadow-md">
+                    Back to Score
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div id="feedback-modal-content" class="hidden bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center transform scale-95 transition-transform duration-300 flex flex-col items-center">
+            <div class="speech-bubble p-6 mb-4">
+                <h2 id="modal-title" class="text-3xl font-bold mb-2">Correct!</h2>
+                <p id="modal-explanation" class="text-gray-600"></p>
+            </div>
+            <div class="emoji-image w-32 h-32 bg-red-100 rounded-full border-4 border-white shadow-lg">🎩</div>
+            <button id="next-question-button" class="w-full mt-6 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-6 rounded-lg text-lg shadow-md transition-transform hover:scale-105">
+                Next Question
+            </button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DOM Elements ---
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const bossScreen = document.getElementById('boss-screen');
+    const endScreen = document.getElementById('end-screen');
+    const prizeWallScreen = document.getElementById('prize-wall-screen');
+    
+    // Buttons
+    const practiceButton = document.getElementById('practice-button');
+    const mainEventButton = document.getElementById('main-event-button');
+    const prizeWallButton = document.getElementById('prize-wall-button');
+    const backToMenuButton = document.getElementById('back-to-menu-button');
+    const playAgainButton = document.getElementById('play-again-button');
+    const mainMenuButton = document.getElementById('main-menu-button');
+    const nextQuestionButton = document.getElementById('next-question-button');
+    const clueCoinButton = document.getElementById('clue-coin-button');
+    const homeButton = document.getElementById('home-button');
+
+    // Game UI
+    const questionNumberEl = document.getElementById('question-number');
+    const totalQuestionsEl = document.getElementById('total-questions');
+    const scoreEl = document.getElementById('score');
+    const questionTextEl = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const clueCoinsEl = document.getElementById('clue-coins');
+    const cheerMeterFill = document.getElementById('cheer-meter-fill');
+    
+    // Boss Battle UI
+    const bossEmojiEl = document.getElementById('boss-emoji');
+    const tearContainer = document.getElementById('tear-container');
+    const playerPowerEl = document.getElementById('player-power');
+    const bossHealthEl = document.getElementById('boss-health');
+    const playerHealthBar = document.getElementById('player-health-bar');
+    const bossHealthBar = document.getElementById('boss-health-bar');
+
+    // End Screen UI
+    const endScoreView = document.getElementById('end-score-view');
+    const endReviewView = document.getElementById('end-review-view');
+    const reviewButton = document.getElementById('review-button');
+    const backToScoreButton = document.getElementById('back-to-score-button');
+    const reviewContainer = document.getElementById('review-container');
+    const endTitle = document.getElementById('end-title');
+    const endMessage = document.getElementById('end-message');
+    const finalScoreEl = document.getElementById('final-score');
+    const ticketsEarnedEl = document.getElementById('tickets-earned');
+    
+    // Modal UI
+    const modalOverlay = document.getElementById('modal-overlay');
+    const feedbackModalContent = document.getElementById('feedback-modal-content');
+    const modalTitle = document.getElementById('modal-title');
+    const modalExplanation = document.getElementById('modal-explanation');
+
+    // Prize Wall UI
+    const ticketCounterEl = document.getElementById('ticket-counter');
+    const prizeContainer = document.getElementById('prize-container');
+
+    // --- Game State & Data ---
+    let score = 0;
+    let currentQuestionIndex = 0;
+    let consecutiveCorrect = 0;
+    let clueCoins = 0;
+    let cheerLevel = 0;
+    let wrongAnswers = [];
+    let currentGameMode = null;
+    let gameQuestions = [];
+
+    // --- Persistent Data (Saved in Browser) ---
+    let tickets = localStorage.getItem('circusTickets') ? parseInt(localStorage.getItem('circusTickets')) : 0;
+    let prizes = localStorage.getItem('circusPrizes') ? JSON.parse(localStorage.getItem('circusPrizes')) : {
+        selectedBoss: '🤡',
+        unlockedBosses: ['🤡']
+    };
+    const ALL_BOSSES = [
+        { emoji: '🤡', cost: 0, name: 'Sad Clown' },
+        { emoji: '🦁', cost: 12, name: 'Roaring Lion' },
+        { emoji: '🧙', cost: 25, name: 'Mighty Magician' },
+        { emoji: '👽', cost: 50, name: 'Cosmic Alien' },
+        { emoji: '🤖', cost: 62, name: 'Rogue Robot' },
+        { emoji: '👻', cost: 75, name: 'Gleeful Ghost' },
+    ];
+
+
+    // --- Sound Effects ---
+    let soundsReady = false;
+    let clickSound, correctSound, booSound, powerupSound, battleHitSound, ticketSound;
+    function setupSounds() {
+        clickSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.01, release: 0.1 } }).toDestination();
+        const correctSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+        correctSound = { play: () => {
+            correctSynth.triggerAttackRelease('C5', '8n', Tone.now());
+            correctSynth.triggerAttackRelease('E5', '8n', Tone.now() + 0.1);
+            correctSynth.triggerAttackRelease('G5', '8n', Tone.now() + 0.2);
+        }};
+        const booSynth = new Tone.AMSynth({ harmonicity: 1.2, oscillator: { type: "sawtooth" }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.2, release: 0.5 }, modulation: { type: "sine" }, modulationEnvelope: { attack: 0.2, decay: 0.01, sustain: 1, release: 0.5 } }).toDestination();
+        booSound = { play: () => { booSynth.triggerAttackRelease("A2", "1n"); booSynth.triggerAttackRelease("G#2", "1n", "+0.1"); }};
+        powerupSound = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.3 } }).toDestination();
+        battleHitSound = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0 } }).toDestination();
+        ticketSound = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+        soundsReady = true;
+    }
+
+    // --- Master Questions Data ---
+    const questions = [
+        { question: "The lion tamer cannot ______ the roaring lion into the ring.", options: ["bring", "take"], correct: 0, explanation: "'Bring' means to move something towards a location, while 'take' means to move something away. The lion tamer is moving the lion towards the ring." },
+        { question: "The clown's oversized shoes were very ______.", options: ["lose", "loose"], correct: 1, explanation: "'Loose' is an adjective meaning not tight. 'Lose' is a verb meaning to misplace something." },
+        { question: "The acrobat's performance had a profound ______ on the audience.", options: ["affect", "effect"], correct: 1, explanation: "'Effect' is a noun meaning a result or influence. 'Affect' is a verb meaning to impact or change." },
+        { question: "The ringmaster announced, 'And ______ we have the amazing trapeze artists!'", options: ["than", "then"], correct: 1, explanation: "'Then' refers to time or sequence. 'Than' is used for comparisons." },
+        { question: "The magician asked for a volunteer ______ he could make disappear.", options: ["who", "whom"], correct: 1, explanation: "Use 'whom' when it is the object of the verb. A simple trick: if you can replace it with 'him' or 'her', use 'whom'." },
+        { question: "The circus has arrived! ______ setting up the big top tent now.", options: ["Their", "There", "They're"], correct: 2, explanation: "'They're' is a contraction of 'they are'. 'Their' is possessive, and 'there' indicates a place." },
+        { question: "The strongman is much stronger ______ the juggler.", options: ["than", "then"], correct: 0, explanation: "'Than' is used for making comparisons. 'Then' indicates a sequence of events." },
+        { question: "______ going to be a fantastic show tonight!", options: ["It's", "Its"], correct: 0, explanation: "'It's' is a contraction for 'it is'. 'Its' is a possessive pronoun." },
+        { question: "The popcorn stand is over ______ by the Ferris wheel.", options: ["their", "there", "they're"], correct: 1, explanation: "'There' indicates a location. 'Their' is possessive, and 'they're' means 'they are'." },
+        { question: "The clown juggled ______ many balls for me to count.", options: ["to", "too", "two"], correct: 1, explanation: "'Too' means 'also' or 'excessively'. 'To' is a preposition, and 'two' is the number." },
+        { question: `"Is that ______ unicycle?" the clown asked.`, options: ["Your", "You're"], correct: 0, explanation: "'Your' is possessive, showing ownership. 'You're' is a contraction of 'you are'." },
+        { question: "The acrobat must ______ down on the high wire to regain her balance.", options: ["lie", "lay"], correct: 0, explanation: "'Lie' means to recline. 'Lay' means to place something down and requires a direct object." },
+        { question: "Please ______ your cotton candy on the table before the ride.", options: ["sit", "set"], correct: 1, explanation: "'Set' means to place something. 'Sit' means to be seated. You 'set' the candy down." },
+        { question: "The circus traveled ______ this year than ever before.", options: ["farther", "further"], correct: 0, explanation: "'Farther' refers to a physical distance. 'Further' refers to a metaphorical or figurative distance." },
+        { question: "There are ______ clowns in this car than in the last one.", options: ["fewer", "less"], correct: 0, explanation: "'Fewer' is used for countable items (clowns). 'Less' is used for uncountable quantities (less confetti)." },
+        { question: "Everyone ______ the ringmaster was amazed by the trick.", options: ["accept", "except"], correct: 1, explanation: "'Except' means 'not including'. 'Accept' means 'to receive'." },
+        { question: "The magician's trick was a clever optical ______.", options: ["allusion", "illusion"], correct: 1, explanation: "'Illusion' is a false perception or a magic trick. 'Allusion' is an indirect reference." },
+        { question: "The ringmaster's booming voice is a ______ to his commanding presence.", options: ["compliment", "complement"], correct: 1, explanation: "'Complement' means something that completes or goes well with something else. 'Compliment' is praise." },
+        { question: "The ______ of the circus is to entertain everyone.", options: ["principal", "principle"], correct: 1, explanation: "'Principle' is a fundamental rule or belief. 'Principal' can mean the head of a school or the main part of something." },
+        { question: "The contortionist could bend into 20 ______ shapes.", options: ["discreet", "discrete"], correct: 1, explanation: "'Discrete' means separate and distinct. 'Discreet' means careful or secretive." },
+        { question: "The unicycle remained ______ while the clown juggled.", options: ["stationary", "stationery"], correct: 0, explanation: "'Stationary' means not moving. 'Stationery' refers to writing materials." },
+        { question: "The parade will march right past the state ______ building.", options: ["capital", "capitol"], correct: 1, explanation: "'Capitol' refers to the building where lawmakers meet. 'Capital' refers to the city or wealth." },
+        { question: "The ringmaster tried to ______ a cheer from the quiet crowd.", options: ["elicit", "illicit"], correct: 0, explanation: "'Elicit' means to draw out a response. 'Illicit' means illegal." },
+        { question: "We ______ you that the tightrope walker is a trained professional.", options: ["assure", "ensure", "insure"], correct: 0, explanation: "'Assure' is to tell someone something positively to dispel any doubts. 'Ensure' is to make certain something will happen. 'Insure' is for financial protection." },
+        { question: "The clowns piled into the car ______.", options: ["altogether", "all together"], correct: 1, explanation: "'All together' means everyone in a group. 'Altogether' means completely or on the whole." },
+        { question: "Going to the circus is not an ______ occurrence for most people.", options: ["everyday", "every day"], correct: 0, explanation: "'Everyday' is an adjective that means common or ordinary. 'Every day' (two words) means each day." },
+        { question: "The crowd cheered ______ when the acrobat landed perfectly.", options: ["aloud", "allowed"], correct: 0, explanation: "'Aloud' means out loud. 'Allowed' means permitted." },
+        { question: "The veteran clown gave the rookie some good ______.", options: ["advice", "advise"], correct: 0, explanation: "'Advice' is a noun (a recommendation). 'Advise' is a verb (the act of giving a recommendation)." },
+        { question: "From the ringmaster's wink, I could ______ that my answer was correct.", options: ["imply", "infer"], correct: 1, explanation: "Speakers/writers 'imply' (hint). Listeners/readers 'infer' (deduce from evidence)." },
+        { question: "The juggler performed ______ for a clown who was feeling sick.", options: ["good", "well"], correct: 1, explanation: "'Well' is an adverb that describes how an action is performed. 'Good' is an adjective that describes a noun." }
+    ];
+
+    // --- Core Game Logic ---
+    function startGame(mode) {
+        if (!soundsReady) setupSounds();
+        Tone.start();
+        clickSound.triggerAttackRelease('C4', '8n');
+        
+        // --- Game Setup based on Mode ---
+        currentGameMode = mode;
+        const shuffled = [...questions].sort(() => 0.5 - Math.random());
+        if (mode === 'practice') {
+            gameQuestions = shuffled.slice(0, 10);
+        } else { // 'main'
+            gameQuestions = [...questions]; // Use all questions for main event
+        }
+        
+        // --- Reset State ---
+        score = 0;
+        currentQuestionIndex = 0;
+        consecutiveCorrect = 0;
+        clueCoins = 1;
+        cheerLevel = 0;
+        wrongAnswers = [];
+        
+        // --- UI Transitions ---
+        startScreen.classList.add('hidden');
+        prizeWallScreen.classList.add('hidden');
+        endScreen.classList.add('hidden');
+        bossScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        homeButton.classList.remove('hidden');
+        
+        updateUI();
+        displayQuestion();
+    }
+
+    function updateUI() {
+        scoreEl.textContent = score;
+        questionNumberEl.textContent = currentQuestionIndex + 1;
+        totalQuestionsEl.textContent = gameQuestions.length;
+        clueCoinsEl.textContent = clueCoins;
+        clueCoinButton.disabled = clueCoins <= 0;
+        updateCheerMeter();
+    }
+
+    function updateCheerMeter() {
+        const percentage = (cheerLevel / gameQuestions.length) * 100;
+        cheerMeterFill.style.height = `${percentage}%`;
+        if (percentage > 80) cheerMeterFill.style.backgroundColor = '#22c55e';
+        else if (percentage > 50) cheerMeterFill.style.backgroundColor = '#f59e0b';
+        else cheerMeterFill.style.backgroundColor = '#facc15';
+    }
+
+    function displayQuestion() {
+        const question = gameQuestions[currentQuestionIndex];
+        const blank = `<span class="inline-block bg-gray-200 rounded-md px-4 py-1 border-b-2 border-gray-400 mx-1">______</span>`;
+        questionTextEl.innerHTML = question.question.replace('______', blank);
+        
+        optionsContainer.innerHTML = '';
+        const shuffledOptions = question.options.map((option, index) => ({ text: option, originalIndex: index })).sort(() => Math.random() - 0.5);
+
+        shuffledOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.textContent = option.text;
+            button.dataset.index = option.originalIndex;
+            button.className = "w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform hover:scale-105";
+            button.addEventListener('click', () => selectAnswer(parseInt(button.dataset.index), option.text));
+            optionsContainer.appendChild(button);
+        });
+        updateUI();
+    }
+
+    function selectAnswer(selectedIndex, selectedText) {
+        if (!soundsReady) return;
+        
+        const question = gameQuestions[currentQuestionIndex];
+        const isCorrect = selectedIndex === question.correct;
+        
+        if (isCorrect) {
+            correctSound.play();
+            score += 10;
+            cheerLevel++;
+            consecutiveCorrect++;
+            if (consecutiveCorrect > 0 && consecutiveCorrect % 8 === 0) {
+                clueCoins++;
+                powerupSound.triggerAttackRelease('A5', '8n');
+            }
+        } else {
+            booSound.play();
+            consecutiveCorrect = 0;
+            wrongAnswers.push({
+                question: question.question,
+                yourAnswer: selectedText,
+                correctAnswer: question.options[question.correct]
+            });
+        }
+        
+        showFeedback(isCorrect);
+        updateUI();
+    }
+
+    function showFeedback(isCorrect) {
+        const question = gameQuestions[currentQuestionIndex];
+        modalTitle.textContent = isCorrect ? 'Correct!' : 'Not Quite!';
+        modalTitle.className = `text-3xl font-bold mb-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}`;
+        modalExplanation.textContent = question.explanation;
+        
+        const isLastQuestion = currentQuestionIndex >= gameQuestions.length - 1;
+        if (isLastQuestion) {
+            nextQuestionButton.textContent = currentGameMode === 'main' ? 'Go to Final Battle!' : 'See Results';
+        } else {
+            nextQuestionButton.textContent = 'Next Question';
+        }
+
+        modalOverlay.classList.remove('hidden');
+        feedbackModalContent.classList.remove('hidden');
+        setTimeout(() => feedbackModalContent.classList.add('scale-100'), 10);
+    }
+    
+    function hideModals() {
+        feedbackModalContent.classList.remove('scale-100');
+        setTimeout(() => modalOverlay.classList.add('hidden'), 300);
+    }
+
+    function advanceGame() {
+        hideModals();
+        currentQuestionIndex++;
+        if (currentQuestionIndex < gameQuestions.length) {
+            displayQuestion();
+        } else {
+            if (currentGameMode === 'main') {
+                startBossBattle();
+            } else {
+                endGame(true); // Practice mode always "wins" as there's no boss
+            }
+        }
+    }
+    
+    function useClueCoin() {
+        if (clueCoins > 0) {
+            powerupSound.triggerAttackRelease('E4', '8n');
+            clueCoins--;
+            const question = gameQuestions[currentQuestionIndex];
+            const incorrectOptions = Array.from(optionsContainer.children).filter(btn => parseInt(btn.dataset.index) !== question.correct);
+            if (incorrectOptions.length > 0) {
+                const optionToDisable = incorrectOptions[Math.floor(Math.random() * incorrectOptions.length)];
+                optionToDisable.disabled = true;
+                optionToDisable.classList.add('bg-gray-400', 'line-through', 'cursor-not-allowed');
+                optionToDisable.classList.remove('hover:bg-red-600');
+            }
+            updateUI();
+        }
+    }
+    
+    // --- Boss Battle & End Game ---
+    function startBossBattle() {
+        gameScreen.classList.add('hidden');
+        bossScreen.classList.remove('hidden');
+        
+        bossEmojiEl.textContent = prizes.selectedBoss;
+        const maxScore = gameQuestions.length * 10;
+        const bossHP = maxScore - 1;
+        
+        playerPowerEl.textContent = score;
+        bossHealthEl.textContent = bossHP;
+        playerHealthBar.style.width = `${(score / maxScore) * 100}%`;
+        bossHealthBar.style.width = `100%`;
+        
+        animateBossBattle(score, bossHP, maxScore);
+    }
+    
+    function animateBossBattle(playerStart, bossStart, maxScore) {
+        const duration = 5000;
+        let startTime = null;
+        let animationFrameId;
+
+        function animationStep(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            const playerCurrent = playerStart - (playerStart * progress);
+            const bossCurrent = bossStart - (bossStart * progress);
+
+            playerPowerEl.textContent = Math.ceil(playerCurrent);
+            bossHealthEl.textContent = Math.ceil(bossCurrent);
+            playerHealthBar.style.width = `${(playerCurrent / maxScore) * 100}%`;
+            bossHealthBar.style.width = `${(bossCurrent / (bossStart || 1)) * 100}%`;
+
+            if (Math.random() > 0.7) {
+                battleHitSound.triggerAttackRelease("8n");
+                bossScreen.querySelector('#battle-arena').classList.add('shake');
+                createTear();
+                setTimeout(() => bossScreen.querySelector('#battle-arena').classList.remove('shake'), 200);
+            }
+
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(animationStep);
+            } else {
+                const playerWon = score > bossStart;
+                setTimeout(() => endGame(playerWon), 500);
+            }
+        }
+        animationFrameId = requestAnimationFrame(animationStep);
+    }
+    
+    function createTear() {
+        const tear = document.createElement('div');
+        tear.className = 'tear';
+        const side = Math.random() > 0.5 ? 'left' : 'right';
+        tear.style.left = side === 'left' ? `${38 + Math.random() * 5}%` : `${57 + Math.random() * 5}%`;
+        tear.style.top = `${40 + Math.random() * 5}%`;
+        tearContainer.appendChild(tear);
+        setTimeout(() => tear.remove(), 1000);
+    }
+    
+    function endGame(playerWon) {
+        bossScreen.classList.add('hidden');
+        endScreen.classList.remove('hidden');
+        homeButton.classList.add('hidden'); 
+        
+        const ticketsEarned = cheerLevel;
+        tickets += ticketsEarned;
+        localStorage.setItem('circusTickets', tickets.toString());
+        
+        ticketsEarnedEl.textContent = ticketsEarned;
+        if(ticketsEarned > 0) ticketSound.triggerAttackRelease('G5', '8n');
+
+        if (currentGameMode === 'main') {
+             if (playerWon) {
+                endTitle.textContent = "Congratulations!";
+                endTitle.className = 'font-circus text-5xl md:text-7xl text-yellow-500 drop-shadow-lg mb-4';
+                endMessage.textContent = "You've conquered the circus of confused words!";
+            } else {
+                endTitle.textContent = "You Were Defeated!";
+                endTitle.className = 'font-circus text-5xl md:text-7xl text-red-500 drop-shadow-lg mb-4';
+                endMessage.textContent = "The boss's tears were too much! Better luck next time.";
+            }
+        } else { // Practice Mode
+             endTitle.textContent = "Practice Complete!";
+             endTitle.className = 'font-circus text-5xl md:text-7xl text-green-600 drop-shadow-lg mb-4';
+             endMessage.textContent = "Great job honing your skills!";
+        }
+       
+        finalScoreEl.textContent = `${score} / ${gameQuestions.length * 10}`;
+
+        if (wrongAnswers.length > 0) reviewButton.classList.remove('hidden');
+        else reviewButton.classList.add('hidden');
+        
+        endScoreView.classList.remove('hidden');
+        endReviewView.classList.add('hidden');
+    }
+
+    function showReview() {
+        reviewContainer.innerHTML = '';
+        wrongAnswers.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'p-3 bg-white rounded shadow';
+            const qText = item.question.replace('______', `<strong class="text-red-600">"${item.yourAnswer}"</strong>`);
+            div.innerHTML = `<p class="font-semibold">${qText}</p><p class="text-sm text-green-600">Correct Answer: ${item.correctAnswer}</p>`;
+            reviewContainer.appendChild(div);
+        });
+        endScoreView.classList.add('hidden');
+        endReviewView.classList.remove('hidden');
+    }
+
+    function showScore() {
+        endReviewView.classList.add('hidden');
+        endScoreView.classList.remove('hidden');
+    }
+
+    function showMainMenu() {
+        gameScreen.classList.add('hidden');
+        endScreen.classList.add('hidden');
+        prizeWallScreen.classList.add('hidden');
+        startScreen.classList.remove('hidden');
+        homeButton.classList.add('hidden');
+    }
+
+    // --- Prize Wall Logic ---
+    function showPrizeWall() {
+        startScreen.classList.add('hidden');
+        prizeWallScreen.classList.remove('hidden');
+        homeButton.classList.remove('hidden');
+        renderPrizes();
+    }
+
+    function renderPrizes() {
+        ticketCounterEl.textContent = tickets;
+        prizeContainer.innerHTML = '';
+
+        ALL_BOSSES.forEach(boss => {
+            const isUnlocked = prizes.unlockedBosses.includes(boss.emoji);
+            const isSelected = prizes.selectedBoss === boss.emoji;
+            
+            const prizeDiv = document.createElement('div');
+            prizeDiv.className = 'p-4 border-2 rounded-lg flex flex-col items-center justify-between';
+            prizeDiv.innerHTML = `
+                <div class="text-6xl mb-2">${boss.emoji}</div>
+                <div class="font-bold text-lg">${boss.name}</div>
+            `;
+
+            const button = document.createElement('button');
+            button.className = 'w-full mt-2 font-bold py-2 px-4 rounded-lg text-white transition-transform hover:scale-105';
+
+            if (isSelected) {
+                button.textContent = 'Selected';
+                button.disabled = true;
+                button.className += ' bg-yellow-500 cursor-not-allowed';
+                prizeDiv.classList.add('border-yellow-500', 'bg-yellow-50');
+            } else if (isUnlocked) {
+                button.textContent = 'Select';
+                button.className += ' bg-green-500 hover:bg-green-600';
+                button.onclick = () => selectPrize(boss.emoji);
+                prizeDiv.classList.add('border-green-500');
+            } else {
+                button.innerHTML = `Buy <span class="font-normal">(${boss.cost} 🎟️)</span>`;
+                if (tickets >= boss.cost) {
+                    button.className += ' bg-blue-500 hover:bg-blue-600';
+                    button.onclick = () => buyPrize(boss.emoji, boss.cost);
+                } else {
+                    button.className += ' bg-gray-400 cursor-not-allowed';
+                    button.disabled = true;
+                }
+                 prizeDiv.classList.add('border-gray-400', 'bg-gray-50');
+            }
+
+            prizeDiv.appendChild(button);
+            prizeContainer.appendChild(prizeDiv);
+        });
+    }
+
+    function buyPrize(emoji, cost) {
+        if (tickets >= cost) {
+            tickets -= cost;
+            prizes.unlockedBosses.push(emoji);
+            prizes.selectedBoss = emoji; // Auto-select on buy
+            
+            localStorage.setItem('circusTickets', tickets.toString());
+            localStorage.setItem('circusPrizes', JSON.stringify(prizes));
+            
+            clickSound.triggerAttackRelease('C5', '8n');
+            renderPrizes();
+        }
+    }
+
+    function selectPrize(emoji) {
+        prizes.selectedBoss = emoji;
+        localStorage.setItem('circusPrizes', JSON.stringify(prizes));
+        clickSound.triggerAttackRelease('E4', '8n');
+        renderPrizes();
+    }
+
+
+    // --- Event Listeners ---
+    practiceButton.addEventListener('click', () => startGame('practice'));
+    mainEventButton.addEventListener('click', () => startGame('main'));
+    playAgainButton.addEventListener('click', () => startGame(currentGameMode));
+    mainMenuButton.addEventListener('click', showMainMenu);
+    nextQuestionButton.addEventListener('click', advanceGame);
+    clueCoinButton.addEventListener('click', useClueCoin);
+    reviewButton.addEventListener('click', showReview);
+    backToScoreButton.addEventListener('click', showScore);
+    prizeWallButton.addEventListener('click', showPrizeWall);
+    backToMenuButton.addEventListener('click', showMainMenu);
+    homeButton.addEventListener('click', showMainMenu);
+    
+    // Animation toggle
+    const toggleAnimationButton = document.getElementById('toggle-animation-button');
+    toggleAnimationButton.addEventListener('click', () => {
+        document.body.classList.toggle('animation-paused');
+        const isPaused = document.body.classList.contains('animation-paused');
+        toggleAnimationButton.innerHTML = isPaused ? 'Play Background ▶️' : 'Pause Background ⏸️';
+    });
+});
+</script>
+
+</body>
+</html>
+
+
+
