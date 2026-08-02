@@ -3,432 +3,1253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Silly Circus of Confused Words</title>
-    
-    <!-- Tailwind CSS for styling -->
+    <title>The Grand Circus of Confused Words</title>
+
+    <!-- Tailwind CSS for layout utilities -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Tone.js for sound effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    
-    <!-- Google Fonts for a fun, circus-like feel -->
+
+    <!-- Google Fonts: Rye (vintage poster), Fredoka (friendly UI), Inter (body), Creepster (boss) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;700&family=Lobster&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Creepster&display=swap" rel="stylesheet">
+
     <style>
-        /* Custom styles for the circus theme */
+        /* ============================================================
+           DESIGN TOKENS — a vintage circus-poster identity
+           ============================================================ */
+        :root {
+            --tent-red:    #C21E28;
+            --tent-red-lt: #E23744;
+            --gold:        #F4B41A;
+            --gold-deep:   #D9962A;
+            --cream:       #FBF1DC;
+            --cream-soft:  #FFF8EC;
+            --ink:         #16233F;
+            --teal:        #14868C;
+            --curtain:     #7A1220;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c;
-            /* Animated background to simulate a circus tent */
-            background-image:
-                repeating-linear-gradient(45deg, #f87171 0, #f87171 40px, #fef2f2 40px, #fef2f2 80px);
-            animation: slide 60s linear infinite;
+            color: var(--ink);
+            background-color: var(--curtain);
+            /* Big-top canvas stripes */
+            background-image: repeating-linear-gradient(
+                115deg,
+                #b81b24 0, #b81b24 46px,
+                #a3151d 46px, #a3151d 92px
+            );
+            background-attachment: fixed;
         }
 
-        .animation-paused {
-            animation: none !important;
-        }
-
-        @keyframes slide {
-            from { background-position: 0 0; }
-            to { background-position: -1000px 0; }
-        }
-
-        /* Custom fonts */
-        .font-circus { font-family: 'Lobster', cursive; }
-        .font-spooky { font-family: 'Creepster', cursive; }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        .shake {
-            animation: shake 0.5s infinite;
-        }
-
-        .tear {
-            position: absolute;
-            width: 10px;
-            height: 20px;
-            background-color: #60a5fa;
-            border-radius: 50%;
-            opacity: 0;
-            animation: fall 1s linear;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(100px); opacity: 0; }
-        }
-        
-        .speech-bubble {
-            position: relative;
-            background: #f3f4f6; /* bg-gray-100 */
-            border-radius: .4em;
-        }
-
-        .speech-bubble:after {
+        /* Ambient drifting spotlight glow over the whole page */
+        body::before {
             content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border: 20px solid transparent;
-            border-top-color: #f3f4f6;
-            border-bottom: 0;
-            border-left: 0;
-            margin-left: -10px;
-            margin-bottom: -20px;
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(120vmax 90vmax at 50% -10%, rgba(255, 240, 200, 0.28), transparent 55%),
+                radial-gradient(60vmax 60vmax at 15% 20%, rgba(20, 134, 140, 0.16), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+            animation: spotlight-drift 22s ease-in-out infinite alternate;
         }
-        
-        #cheer-meter-fill {
-            transition: height 0.5s ease-out, background-color 0.5s ease;
+        @keyframes spotlight-drift {
+            from { transform: translateX(-4%); }
+            to   { transform: translateX(4%); }
         }
-        
-        .emoji-image {
-            font-size: 8rem; /* Large emoji size */
+        .animation-paused body::before,
+        body.animation-paused::before { animation: none !important; }
+
+        /* --- Typography roles --- */
+        .font-poster  { font-family: 'Rye', 'Fredoka', cursive; letter-spacing: .5px; }
+        .font-ui      { font-family: 'Fredoka', sans-serif; }
+        .font-spooky  { font-family: 'Creepster', cursive; letter-spacing: 2px; }
+
+        /* ============================================================
+           MARQUEE TITLE with chasing light bulbs
+           ============================================================ */
+        .marquee {
+            position: relative;
+            display: inline-block;
+            padding: 22px 40px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, var(--tent-red-lt), var(--tent-red));
+            border: 4px solid var(--gold);
+            box-shadow: 0 10px 0 rgba(0,0,0,.18), inset 0 0 30px rgba(0,0,0,.25);
+        }
+        .marquee-title {
+            color: var(--cream);
+            text-shadow: 0 2px 0 var(--curtain), 0 4px 8px rgba(0,0,0,.4);
             line-height: 1;
+        }
+        .bulbs { position: absolute; inset: 0; pointer-events: none; }
+        .bulb {
+            position: absolute;
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: var(--gold);
+            box-shadow: 0 0 8px 2px rgba(244,180,26,.9);
+            animation: bulb-blink 1.2s steps(1,end) infinite;
+        }
+        @keyframes bulb-blink {
+            0%, 49% { opacity: 1; background: var(--gold); box-shadow: 0 0 9px 3px rgba(244,180,26,.95); }
+            50%, 100% { opacity: .35; background: #7a5a10; box-shadow: none; }
+        }
+
+        /* ============================================================
+           PENNANT BUNTING across the top of the game card
+           ============================================================ */
+        .bunting {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            height: 26px;
+            overflow: hidden;
+        }
+        .pennant {
+            flex: 1 0 auto;
+            width: 30px;
+            height: 26px;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        /* ============================================================
+           CARDS & BUTTONS
+           ============================================================ */
+        .card-panel {
+            background: var(--cream-soft);
+            border: 3px solid var(--ink);
+            box-shadow: 0 8px 0 rgba(0,0,0,.15);
+        }
+
+        .btn {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border-radius: 14px;
+            border: 3px solid var(--ink);
+            box-shadow: 0 5px 0 rgba(0,0,0,.28);
+            transition: transform .08s ease, box-shadow .08s ease, filter .15s ease;
+            cursor: pointer;
+        }
+        .btn:hover { filter: brightness(1.05); }
+        .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.28); }
+        .btn:focus-visible { outline: 4px solid var(--teal); outline-offset: 3px; }
+        .btn:disabled { cursor: not-allowed; filter: grayscale(.6) brightness(.9); box-shadow: 0 5px 0 rgba(0,0,0,.28); }
+
+        .btn-red   { background: var(--tent-red-lt); color: var(--cream); }
+        .btn-gold  { background: var(--gold); color: var(--ink); }
+        .btn-green { background: #2f9e44; color: var(--cream); }
+        .btn-blue  { background: var(--teal); color: var(--cream); }
+        .btn-ink   { background: var(--ink); color: var(--cream); }
+
+        /* Answer option cards */
+        .option-btn {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            width: 100%;
+            padding: 18px 20px;
+            border-radius: 16px;
+            border: 3px solid var(--ink);
+            background: #fff;
+            color: var(--ink);
+            box-shadow: 0 5px 0 rgba(0,0,0,.2);
+            transition: transform .08s ease, box-shadow .08s ease, background .15s ease;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 14px;
+            text-align: left;
+        }
+        .option-btn:hover:not(:disabled) { transform: translateY(-2px); background: var(--cream); }
+        .option-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+        .option-btn:focus-visible { outline: 4px solid var(--teal); outline-offset: 3px; }
+        .option-btn .key-cap {
+            flex: 0 0 auto;
+            width: 30px; height: 30px;
+            display: grid; place-items: center;
+            border-radius: 8px;
+            background: var(--gold);
+            color: var(--ink);
+            font-weight: 700;
+            border: 2px solid var(--ink);
+            font-size: .95rem;
+        }
+        .option-btn.correct  { background: #2f9e44; color: #fff; border-color:#1b5e2a; }
+        .option-btn.correct .key-cap { background:#fff; }
+        .option-btn.wrong    { background: var(--tent-red); color: #fff; border-color: var(--curtain); }
+        .option-btn.wrong .key-cap { background:#fff; }
+        .option-btn.eliminated { text-decoration: line-through; opacity: .45; background: #d1cabb; }
+        .option-btn:disabled { cursor: default; }
+
+        /* Question poster card */
+        .poster {
+            position: relative;
+            background:
+                radial-gradient(circle at 50% 0, rgba(244,180,26,.18), transparent 60%),
+                var(--cream);
+            border: 4px solid var(--ink);
+            border-radius: 18px;
+            box-shadow: inset 0 0 0 3px var(--gold), 0 8px 0 rgba(0,0,0,.15);
+        }
+        .poster.enter { animation: poster-in .45s cubic-bezier(.2,.9,.3,1.2) both; }
+        @keyframes poster-in {
+            from { transform: translateY(18px) rotate(-1deg) scale(.96); opacity: 0; }
+            to   { transform: none; opacity: 1; }
+        }
+
+        .blank-slot {
+            display: inline-block;
+            min-width: 92px;
+            padding: 2px 14px;
+            margin: 0 4px;
+            border-bottom: 4px solid var(--gold-deep);
+            color: var(--gold-deep);
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* ============================================================
+           RINGMASTER MASCOT
+           ============================================================ */
+        .mascot {
+            font-size: 4.5rem;
+            line-height: 1;
+            display: inline-block;
+            filter: drop-shadow(0 6px 6px rgba(0,0,0,.35));
+        }
+        .mascot.happy { animation: mascot-bounce .6s ease; }
+        .mascot.sad   { animation: mascot-wobble .6s ease; }
+        @keyframes mascot-bounce {
+            0%,100% { transform: translateY(0) rotate(0); }
+            30% { transform: translateY(-22px) rotate(-8deg); }
+            60% { transform: translateY(0) rotate(6deg); }
+        }
+        @keyframes mascot-wobble {
+            0%,100% { transform: rotate(0); }
+            20% { transform: rotate(-10deg); } 40% { transform: rotate(9deg); }
+            60% { transform: rotate(-6deg); } 80% { transform: rotate(4deg); }
+        }
+
+        .ring-disc {
+            display: grid; place-items: center;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 35%, #fff 0, var(--cream) 55%, #ecdcbb 100%);
+            border: 5px solid var(--gold);
+            box-shadow: 0 8px 0 rgba(0,0,0,.15), inset 0 0 20px rgba(0,0,0,.12);
+        }
+
+        /* ============================================================
+           APPLAUSE METER
+           ============================================================ */
+        #cheer-meter-fill { transition: height .5s ease-out, background-color .5s ease; }
+
+        /* ============================================================
+           STREAK / COMBO FLARE
+           ============================================================ */
+        .streak-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--ink); color: var(--gold);
+            border-radius: 999px; padding: 4px 14px;
+            font-family: 'Fredoka'; font-weight: 700;
+            border: 2px solid var(--gold);
+            transition: transform .15s ease;
+        }
+        .streak-badge.pulse { animation: streak-pulse .4s ease; }
+        @keyframes streak-pulse { 0%{transform:scale(1);} 50%{transform:scale(1.25);} 100%{transform:scale(1);} }
+
+        /* ============================================================
+           CONFETTI
+           ============================================================ */
+        #confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+        .confetti {
+            position: absolute; top: -20px;
+            width: 11px; height: 16px; border-radius: 2px;
+            will-change: transform, opacity;
+            animation: confetti-fall linear forwards;
+        }
+        @keyframes confetti-fall {
+            0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: .9; }
+        }
+
+        /* ============================================================
+           MODAL
+           ============================================================ */
+        #modal-overlay { transition: opacity .25s ease; }
+        .modal-card {
+            transform: scale(.9);
+            opacity: 0;
+            transition: transform .3s cubic-bezier(.2,.9,.3,1.3), opacity .25s ease;
+        }
+        .modal-card.show { transform: scale(1); opacity: 1; }
+        .speech-bubble { position: relative; background: var(--cream); border-radius: 16px; border: 3px solid var(--ink); }
+        /* tail points UP toward the ringmaster figure above the bubble */
+        .speech-bubble:after {
+            content: ''; position: absolute; top: -18px; left: 50%;
+            width: 0; height: 0;
+            border: 18px solid transparent; border-bottom-color: var(--ink);
+            border-top: 0; margin-left: -18px;
+        }
+        .speech-bubble:before {
+            content: ''; position: absolute; top: -13px; left: 50%;
+            width: 0; height: 0;
+            border: 15px solid transparent; border-bottom-color: var(--cream);
+            border-top: 0; margin-left: -15px; z-index: 1;
+        }
+
+        /* --- Ringmaster stage + swinging nameplate --- */
+        .ringmaster-stage { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .ringmaster-nameplate {
+            margin-top: -10px;
+            background: linear-gradient(180deg, var(--tent-red-lt), var(--tent-red));
+            color: var(--cream);
+            border: 3px solid var(--gold);
+            border-radius: 10px;
+            padding: 3px 16px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 0 var(--curtain);
+            box-shadow: 0 4px 0 rgba(0,0,0,.25);
+            transform-origin: top center;
+            animation: nameplate-swing 3.2s ease-in-out infinite;
+        }
+        @keyframes nameplate-swing { 0%,100%{ transform: rotate(-2.5deg);} 50%{ transform: rotate(2.5deg);} }
+
+        /* --- Spelling-tip scroll --- */
+        .tip-scroll {
+            position: relative;
+            background:
+                radial-gradient(circle at 12px 12px, rgba(0,0,0,.05) 2px, transparent 3px),
+                var(--cream-soft);
+            border: 3px solid var(--gold-deep);
+            border-radius: 14px;
+            padding: 14px 16px 14px 18px;
+            box-shadow: inset 0 0 0 2px rgba(217,150,42,.35), 0 5px 0 rgba(0,0,0,.12);
+        }
+        .tip-scroll:before {
+            content: '';
+            position: absolute; left: 0; top: 10px; bottom: 10px; width: 6px;
+            border-radius: 6px;
+            background: repeating-linear-gradient(180deg, var(--tent-red) 0 10px, var(--cream) 10px 20px);
+        }
+        .tip-scroll-label {
+            font-weight: 800;
+            color: var(--tent-red);
+            text-transform: uppercase;
+            font-size: .78rem;
+            letter-spacing: .6px;
+            margin-bottom: 4px;
+        }
+        #modal-tip { color: var(--ink); line-height: 1.45; }
+
+        /* ============================================================
+           BOSS BATTLE
+           ============================================================ */
+        #boss-screen {
+            background:
+                radial-gradient(circle at 50% 30%, rgba(122,18,32,.55), transparent 60%),
+                linear-gradient(180deg, #1a0a10, #2a0d16);
+        }
+        .health-track {
+            width: 100%; height: 26px; border-radius: 999px;
+            background: #3a2028; border: 3px solid #000; overflow: hidden;
+        }
+        .health-fill { height: 100%; border-radius: 999px; transition: width .35s ease; }
+        .boss-avatar { font-size: 8rem; line-height: 1; filter: drop-shadow(0 8px 10px rgba(0,0,0,.6)); display:inline-block; }
+        .boss-avatar.hit { animation: boss-hit .3s ease; }
+        @keyframes boss-hit {
+            0%,100%{ transform: translateX(0); filter: drop-shadow(0 8px 10px rgba(0,0,0,.6)); }
+            25%{ transform: translateX(-10px) scale(1.04); filter: brightness(2) drop-shadow(0 0 14px #fff); }
+            75%{ transform: translateX(10px); }
+        }
+        .player-champ.hit { animation: champ-hit .3s ease; }
+        @keyframes champ-hit {
+            0%,100%{ transform: translateX(0); }
+            50%{ transform: translateX(8px) rotate(4deg); filter: brightness(1.6); }
+        }
+        .projectile {
+            position: absolute; font-size: 2rem; pointer-events: none; z-index: 5;
+            will-change: transform, opacity;
+        }
+
+        /* ============================================================
+           PRIZE / TICKET STUB
+           ============================================================ */
+        .ticket-stub {
+            position: relative;
+            background: var(--gold);
+            color: var(--ink);
+            border: 3px dashed var(--ink);
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-family: 'Fredoka'; font-weight: 700;
+        }
+        .prize-card {
+            position: relative;
+            background: var(--cream-soft);
+            border: 3px solid var(--ink);
+            border-radius: 16px;
+            box-shadow: 0 6px 0 rgba(0,0,0,.25);
+            transition: transform .12s ease, box-shadow .12s ease;
+            overflow: hidden;
+        }
+        .prize-card:hover { transform: translateY(-3px); }
+        .prize-card.locked { filter: grayscale(.5) brightness(.96); }
+        .prize-card.selected {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--gold), 0 6px 0 rgba(0,0,0,.25);
+        }
+        .prize-card .lock-badge {
+            position: absolute; top: 8px; right: 8px;
+            font-size: 1.1rem; opacity: .7;
+        }
+        .prize-card .now-tag {
+            position: absolute; top: 8px; left: 8px;
+            background: var(--gold); color: var(--ink);
+            font-size: .6rem; font-weight: 800; letter-spacing: .5px;
+            padding: 2px 6px; border-radius: 6px; border: 2px solid var(--ink);
+            text-transform: uppercase;
+        }
+        /* affordable-but-unbought cards get a sweeping shimmer */
+        .prize-card.affordable::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(115deg, transparent 35%, rgba(244,180,26,.45) 50%, transparent 65%);
+            transform: translateX(-120%);
+            animation: card-shimmer 2.6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes card-shimmer { 0%{ transform: translateX(-120%);} 60%,100%{ transform: translateX(120%);} }
+        .prize-tagline { font-size: .72rem; line-height: 1.2; color: var(--teal); font-style: italic; margin-top: 2px; min-height: 2.1em; }
+
+        /* --- Midway backdrop so gold/cream text & cards pop --- */
+        #prize-wall-screen {
+            background:
+                repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 26px, transparent 26px 52px),
+                radial-gradient(circle at 50% -10%, #3a0a12 0%, var(--curtain) 55%, #4a0b14 100%);
+            color: var(--cream);
+        }
+        .booth-marquee {
+            position: relative;
+            max-width: 640px;
+            background: linear-gradient(180deg, var(--tent-red-lt), var(--tent-red));
+            border: 4px solid var(--gold);
+            border-radius: 16px;
+            padding: 16px 18px 20px;
+            box-shadow: 0 8px 0 rgba(0,0,0,.3);
+        }
+        .booth-scallop {
+            position: absolute; left: 0; right: 0; bottom: -16px; height: 16px;
+            background:
+                radial-gradient(circle at 12px 0, var(--gold) 0 11px, transparent 12px) repeat-x;
+            background-size: 24px 16px;
+        }
+        .prize-spotlight {
+            position: relative;
+            max-width: 460px;
+            padding: 18px 22px;
+            border-radius: 16px;
+            border: 2px dashed var(--gold);
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(244,180,26,.28), transparent 70%),
+                rgba(0,0,0,.28);
+        }
+        .spotlight-label {
+            text-transform: uppercase; letter-spacing: 1.5px; font-size: .7rem;
+            color: var(--gold); margin-bottom: 6px; font-weight: 800;
+        }
+        .spotlight-emoji { font-size: 3.4rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+
+        .upgrade-card {
+            display: flex; align-items: center; gap: 14px; text-align: left;
+            background: var(--cream-soft);
+            border: 3px solid var(--ink);
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 6px 0 rgba(0,0,0,.25);
+        }
+        .upgrade-card .up-emoji { font-size: 2.4rem; line-height: 1; }
+        .upgrade-card .up-title { font-weight: 800; color: var(--ink); }
+        .upgrade-card .up-desc { font-size: .8rem; color: var(--teal); }
+        .upgrade-card.maxed { filter: grayscale(.3); }
+
+        .diff-btn.active { background: var(--ink); color: var(--gold); }
+
+        .tricky-badge {
+            display: inline-block;
+            min-width: 24px;
+            margin-left: 6px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: var(--tent-red);
+            color: var(--cream);
+            font-size: .85rem;
+            font-weight: 800;
+            border: 2px solid var(--ink);
+            vertical-align: middle;
+        }
+
+        /* ============================================================
+           REDUCED MOTION
+           ============================================================ */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important;
+            }
+            body::before { animation: none !important; }
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="min-h-screen p-4 flex items-center justify-center">
 
-    <!-- NEW: Home button, hidden by default -->
-    <button id="home-button" class="hidden fixed top-4 left-4 z-50 bg-white/80 backdrop-blur-sm text-gray-800 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-white transition-all">
-        Home 🏠
-    </button>
-    <button id="toggle-animation-button" class="fixed top-4 right-4 z-50 bg-white/80 backdrop-blur-sm text-gray-800 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-white transition-all">
-        Pause Background ⏸️
-    </button>
+    <!-- Confetti render layer -->
+    <div id="confetti-layer" aria-hidden="true"></div>
 
-    <div id="game-container" class="w-full max-w-5xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
+    <!-- Top controls -->
+    <button id="home-button" class="btn btn-ink hidden fixed top-4 left-4 z-50 py-2 px-4 text-sm">🏠 Home</button>
+    <button id="toggle-animation-button" class="btn btn-ink fixed top-4 right-4 z-50 py-2 px-4 text-sm" aria-pressed="false">⏸️ Motion</button>
 
-        <!-- ====================================================== -->
-        <!-- START SCREEN (NOW WITH GAME MODES) -->
-        <!-- ====================================================== -->
-        <div id="start-screen" class="p-8 md:p-12 text-center">
-            <h1 class="font-circus text-4xl md:text-6xl text-red-600 drop-shadow-lg">Silly Circus of Confused Words!</h1>
-            <div class="emoji-image mx-auto my-6 h-48 w-48 bg-red-100 rounded-full shadow-lg">🎩</div>
-            <p class="text-gray-700 text-lg md:text-xl mb-6 max-w-2xl mx-auto">
-                Welcome to the Silly Circus! Choose your challenge below.
+    <div id="game-container" class="w-full max-w-5xl mx-auto relative z-10 rounded-[26px] overflow-hidden shadow-2xl"
+         style="background: var(--cream);">
+
+        <!-- Pennant bunting header -->
+        <div id="bunting" class="bunting" aria-hidden="true"></div>
+
+        <!-- ============================ START SCREEN ============================ -->
+        <section id="start-screen" class="p-6 md:p-12 text-center">
+            <div class="marquee mb-6">
+                <div class="bulbs" id="marquee-bulbs" aria-hidden="true"></div>
+                <h1 class="marquee-title font-poster text-3xl md:text-6xl">The Grand Circus<br>of Confused Words</h1>
+            </div>
+
+            <div class="ring-disc mascot-stage mx-auto my-4 h-40 w-40">
+                <span class="mascot" id="start-mascot">🎩</span>
+            </div>
+
+            <p class="text-lg md:text-xl mb-6 max-w-2xl mx-auto font-ui">
+                Step right up! Master the trickiest word mix-ups in the English language and earn tickets for the Prize Wall.
             </p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
-                <button id="practice-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300 w-full md:w-auto">
-                    Practice Tent <br><span class="text-sm font-normal">(10 Questions)</span>
+
+            <!-- Difficulty picker (applies to Practice) -->
+            <div class="mb-6">
+                <p class="font-ui font-semibold mb-2 text-sm uppercase tracking-wide" style="color:var(--teal)">Choose your ring</p>
+                <div class="inline-flex flex-wrap justify-center gap-2" id="difficulty-picker" role="group" aria-label="Difficulty">
+                    <button class="btn diff-btn btn-gold active py-2 px-4 text-sm" data-diff="0">All Levels</button>
+                    <button class="btn diff-btn btn-gold py-2 px-4 text-sm" data-diff="1">★ Warm-Up</button>
+                    <button class="btn diff-btn btn-gold py-2 px-4 text-sm" data-diff="2">★★ Center Ring</button>
+                    <button class="btn diff-btn btn-gold py-2 px-4 text-sm" data-diff="3">★★★ High Wire</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-center items-stretch gap-4 max-w-2xl mx-auto">
+                <button id="practice-button" class="btn btn-green flex-1 py-4 px-6 text-xl">
+                    Practice Tent
+                    <span class="block text-sm font-normal opacity-90">10 questions · no boss</span>
                 </button>
-                <button id="main-event-button" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300 w-full md:w-auto">
-                    The Main Event <br><span class="text-sm font-normal">(All Questions + Boss)</span>
+                <button id="main-event-button" class="btn btn-red flex-1 py-4 px-6 text-xl">
+                    The Main Event
+                    <span class="block text-sm font-normal opacity-90">20 questions + boss battle</span>
                 </button>
             </div>
-             <button id="prize-wall-button" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                Prize Wall 🎟️
-            </button>
-        </div>
 
-        <!-- ====================================================== -->
-        <!-- NEW: PRIZE WALL SCREEN -->
-        <!-- ====================================================== -->
-        <div id="prize-wall-screen" class="hidden p-8 md:p-12 text-center">
-             <h1 class="font-circus text-4xl md:text-6xl text-blue-600 drop-shadow-lg">Prize Wall</h1>
-             <p class="text-gray-700 text-lg my-4">Spend your tickets to unlock new boss opponents!</p>
-             <div class="mb-6 text-2xl font-bold bg-yellow-100 border-2 border-yellow-400 rounded-lg p-2 inline-block">
-                Tickets: <span id="ticket-counter">0</span> 🎟️
-             </div>
-             <div id="prize-container" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                 <!-- Prize items will be generated here by JS -->
-             </div>
-             <button id="back-to-menu-button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                 Back to Main Menu
-             </button>
-        </div>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6">
+                <button id="tricky-words-button" class="btn btn-gold hidden py-3 px-8 text-lg">🎪 Tricky Words Ring <span id="tricky-count-badge" class="tricky-badge">0</span></button>
+                <button id="prize-wall-button" class="btn btn-blue py-3 px-8 text-lg">🎟️ Prize Wall</button>
+            </div>
+            <p id="tricky-hint" class="mt-3 text-sm font-ui hidden" style="color:var(--tent-red)">Words you've missed are waiting in the Tricky Words Ring — practice them to retire them!</p>
+            <p class="mt-4 text-sm font-ui" style="color:var(--teal)">Tip: press <strong>1–4</strong> to answer with the keyboard.</p>
+        </section>
 
-        <!-- ====================================================== -->
-        <!-- GAME SCREEN -->
-        <!-- ====================================================== -->
-        <div id="game-screen" class="hidden p-6 md:p-8">
-            <div class="flex flex-col md:flex-row gap-8">
-                <!-- Main Game Area -->
+        <!-- ============================ PRIZE WALL (THE MIDWAY) ============================ -->
+        <section id="prize-wall-screen" class="hidden p-6 md:p-10 text-center">
+            <div class="booth-marquee mx-auto mb-6">
+                <div class="booth-scallop"></div>
+                <h1 class="font-poster text-4xl md:text-5xl" style="color:var(--cream)">🎟️ The Midway Prize Booth</h1>
+                <p class="font-ui mt-1" style="color:var(--gold)">Trade your tickets for new rivals &amp; ringside upgrades!</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-4 mb-6">
+                <div class="ticket-stub text-xl">🎟️ Tickets: <span id="ticket-counter">0</span></div>
+                <div class="ticket-stub text-base" style="background:var(--teal); color:var(--cream); border-color:var(--cream)">
+                    🎪 Performers recruited: <span id="recruit-progress">1 / 7</span>
+                </div>
+            </div>
+
+            <!-- Spotlight on the currently chosen challenger -->
+            <div id="prize-spotlight" class="prize-spotlight mx-auto mb-8">
+                <div class="spotlight-label font-ui">Now entering the ring</div>
+                <div class="flex items-center justify-center gap-3">
+                    <span id="spotlight-emoji" class="spotlight-emoji">🤡</span>
+                    <div class="text-left">
+                        <div id="spotlight-name" class="font-poster text-2xl" style="color:var(--gold)">Sad Clown</div>
+                        <div id="spotlight-taunt" class="font-ui text-sm" style="color:var(--cream)"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performers to recruit -->
+            <h2 class="font-poster text-3xl mb-1" style="color:var(--gold)">Recruit a Challenger</h2>
+            <p class="font-ui text-sm mb-4" style="color:var(--cream)">Unlock a rival, then pick who you'll face in the Main Event.</p>
+            <div id="prize-container" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"></div>
+
+            <!-- Ringside upgrades -->
+            <h2 class="font-poster text-3xl mb-1" style="color:var(--gold)">Ringside Upgrades</h2>
+            <p class="font-ui text-sm mb-4" style="color:var(--cream)">Boosts that help you in every round.</p>
+            <div id="upgrade-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 max-w-2xl mx-auto"></div>
+
+            <button id="back-to-menu-button" class="btn btn-gold py-3 px-8 text-lg">Back to the Big Top</button>
+        </section>
+
+        <!-- ============================ GAME SCREEN ============================ -->
+        <section id="game-screen" class="hidden p-5 md:p-8">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Main play area -->
                 <div class="flex-grow">
-                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
-                        <div class="text-lg font-bold text-gray-700">Question: <span id="question-number">1</span> / <span id="total-questions">10</span></div>
-                        <div class="text-lg font-bold text-yellow-600">Score: <span id="score">0</span></div>
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-3 font-ui">
+                        <div class="font-semibold">Question <span id="question-number">1</span> / <span id="total-questions">10</span></div>
+                        <div id="streak-badge" class="streak-badge" style="visibility:hidden">🔥 Streak <span id="streak-count">0</span></div>
+                        <div class="font-semibold" style="color:var(--gold-deep)">Score <span id="score">0</span></div>
                     </div>
-                    
-                    <div class="flex justify-center items-center gap-4 mb-6 p-3 bg-red-100 rounded-lg">
-                        <button id="clue-coin-button" class="flex items-center gap-2 bg-blue-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all">
-                            <span>Clue Coin 🪙</span>
-                            <span id="clue-coins" class="font-bold bg-white text-blue-600 rounded-full px-2">0</span>
+
+                    <!-- progress bar -->
+                    <div class="w-full h-3 rounded-full mb-4 overflow-hidden" style="background:#e6dcc4;border:2px solid var(--ink)">
+                        <div id="progress-fill" class="h-full" style="width:0%;background:var(--teal);transition:width .3s ease"></div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center items-center gap-3 mb-4">
+                        <button id="clue-coin-button" class="btn btn-blue py-2 px-4 text-sm flex items-center gap-2">
+                            🪙 Clue Coin <span id="clue-coins" class="bg-white rounded-full px-2" style="color:var(--teal)">0</span>
                         </button>
+                        <span id="pair-tag" class="font-ui text-sm px-3 py-1 rounded-full" style="background:var(--ink);color:var(--cream)"></span>
                     </div>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow-inner mb-6">
-                        <p id="question-text" class="text-xl md:text-2xl text-gray-800 text-center leading-relaxed"></p>
+
+                    <div id="question-poster" class="poster p-6 md:p-8 mb-5">
+                        <p id="question-text" class="text-xl md:text-2xl text-center leading-relaxed font-ui" aria-live="polite"></p>
                     </div>
-                    
-                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
                 </div>
-                
-                <!-- Applause-O-Meter -->
-                <div id="cheer-meter-container" class="w-full md:w-24 flex flex-col items-center bg-gray-200 p-3 rounded-lg shadow-inner">
-                    <h3 class="font-bold text-gray-700 mb-2 text-center">Applause-O-Meter</h3>
-                    <div class="w-12 h-64 bg-gray-300 rounded-full overflow-hidden border-2 border-gray-400 flex flex-col-reverse">
-                        <div id="cheer-meter-fill" class="w-full bg-yellow-400" style="height: 0%;"></div>
+
+                <!-- Applause meter -->
+                <aside class="w-full md:w-28 flex md:flex-col items-center gap-3 card-panel p-3 rounded-xl">
+                    <h3 class="font-ui font-bold text-center text-sm">Applause-O-Meter</h3>
+                    <div class="flex-1 md:flex-none w-full md:w-12 h-8 md:h-56 rounded-full overflow-hidden border-2 flex md:flex-col-reverse flex-row"
+                         style="background:#e6dcc4;border-color:var(--ink)">
+                        <div id="cheer-meter-fill" class="bg-yellow-400" style="height:0%;width:100%"></div>
                     </div>
-                    <div class="text-2xl mt-2">👏</div>
-                </div>
+                    <div class="text-3xl">👏</div>
+                </aside>
             </div>
-        </div>
+        </section>
 
-        <!-- ====================================================== -->
-        <!-- BOSS BATTLE SCREEN -->
-        <!-- ====================================================== -->
-        <div id="boss-screen" class="hidden p-6 md:p-8 text-center bg-black/80">
-             <h2 class="font-spooky text-5xl md:text-7xl text-red-500 mb-4 drop-shadow-lg">FINAL BATTLE!</h2>
-             <p class="text-white text-lg mb-6">Your word power vs. the Sad Clown's tears!</p>
-             <div id="battle-arena" class="relative max-w-lg mx-auto p-4 bg-gray-700 rounded-lg border-4 border-yellow-400">
-                 <div id="boss-emoji" class="emoji-image mx-auto mb-4 h-64 w-64 bg-gray-800 rounded-full shadow-lg">🤡</div>
-                 <div id="tear-container" class="absolute top-0 left-0 w-full h-full"></div>
-                
-                 <div class="flex justify-between gap-4 text-white">
-                     <div class="w-1/2">
-                         <h3 class="font-bold text-green-400">YOUR POWER</h3>
-                         <div class="w-full bg-gray-600 rounded-full h-8 border-2 border-green-500">
-                             <div id="player-health-bar" class="bg-green-500 h-full rounded-full" style="width: 100%;"></div>
-                         </div>
-                         <p id="player-power" class="text-3xl font-bold mt-2">0</p>
-                     </div>
-                     <div class="w-1/2">
-                         <h3 class="font-bold text-red-400">BOSS HEALTH</h3>
-                         <div class="w-full bg-gray-600 rounded-full h-8 border-2 border-red-500">
-                             <div id="boss-health-bar" class="bg-red-500 h-full rounded-full" style="width: 100%;"></div>
-                         </div>
-                         <p id="boss-health" class="text-3xl font-bold mt-2">0</p>
-                     </div>
-                 </div>
-             </div>
-        </div>
+        <!-- ============================ BOSS BATTLE ============================ -->
+        <section id="boss-screen" class="hidden p-6 md:p-10 text-center">
+            <h2 class="font-spooky text-5xl md:text-7xl mb-1" style="color:var(--tent-red-lt)">FINAL BATTLE!</h2>
+            <p id="boss-tagline" class="text-cream text-lg mb-6" style="color:var(--cream)">Your word power vs. the boss's mischief!</p>
 
-        <!-- ====================================================== -->
-        <!-- END SCREEN -->
-        <!-- ====================================================== -->
-        <div id="end-screen" class="hidden p-8 md:p-12 text-center">
+            <div id="battle-arena" class="relative max-w-2xl mx-auto p-5 rounded-2xl"
+                 style="background:rgba(0,0,0,.35);border:4px solid var(--gold)">
+
+                <div class="flex justify-around items-end mb-5">
+                    <div class="w-2/5">
+                        <span id="player-champ" class="player-champ boss-avatar" style="font-size:4.5rem">🤹</span>
+                        <h3 class="font-ui font-bold mt-1" style="color:#7be08a">YOUR POWER</h3>
+                        <div class="health-track mt-1"><div id="player-health-bar" class="health-fill" style="width:100%;background:#2f9e44"></div></div>
+                        <p id="player-power" class="text-2xl font-bold mt-1" style="color:#fff">100</p>
+                    </div>
+                    <div class="text-4xl pb-16" style="color:var(--gold)">VS</div>
+                    <div class="w-2/5">
+                        <span id="boss-emoji" class="boss-avatar">🤡</span>
+                        <h3 class="font-ui font-bold mt-1" style="color:#ff9aa2">BOSS HEALTH</h3>
+                        <div class="health-track mt-1"><div id="boss-health-bar" class="health-fill" style="width:100%;background:var(--tent-red-lt)"></div></div>
+                        <p id="boss-health" class="text-2xl font-bold mt-1" style="color:#fff">100</p>
+                    </div>
+                </div>
+                <div id="battle-log" class="font-ui text-lg h-8" style="color:var(--gold)">Ready...</div>
+            </div>
+        </section>
+
+        <!-- ============================ END SCREEN ============================ -->
+        <section id="end-screen" class="hidden p-6 md:p-12 text-center">
             <div id="end-score-view">
-                <h1 id="end-title" class="font-circus text-5xl md:text-7xl text-yellow-500 drop-shadow-lg mb-4">Congratulations!</h1>
-                <p id="end-message" class="text-gray-700 text-xl mb-2">You've conquered the circus of confused words!</p>
-                <p class="text-2xl font-bold mb-4">Final Score: <span id="final-score"></span></p>
-                <p class="text-xl font-bold mb-8 text-yellow-600">Tickets Earned: <span id="tickets-earned"></span> 🎟️</p>
-                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                    <button id="play-again-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                        Play Again
-                    </button>
-                    <button id="review-button" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                        Review Mistakes
-                    </button>
+                <div class="ring-disc mx-auto mb-4 h-32 w-32"><span class="mascot" id="end-mascot">🎉</span></div>
+                <h1 id="end-title" class="font-poster text-4xl md:text-6xl mb-3" style="color:var(--gold-deep)">Congratulations!</h1>
+                <p id="end-message" class="text-xl mb-3 font-ui"></p>
+                <div class="flex flex-wrap justify-center gap-4 mb-2 font-ui">
+                    <div class="card-panel rounded-xl px-5 py-3">Final Score<br><span id="final-score" class="text-2xl font-bold"></span></div>
+                    <div class="card-panel rounded-xl px-5 py-3">Accuracy<br><span id="final-accuracy" class="text-2xl font-bold"></span></div>
+                    <div class="ticket-stub text-lg self-center">🎟️ +<span id="tickets-earned">0</span> tickets</div>
                 </div>
-                 <button id="main-menu-button" class="mt-6 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                    Main Menu
-                </button>
+                <p id="best-note" class="text-sm font-ui mb-6" style="color:var(--teal)"></p>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-3 flex-wrap">
+                    <button id="play-again-button" class="btn btn-red py-3 px-8 text-xl">Play Again</button>
+                    <button id="redemption-button" class="btn btn-green hidden py-3 px-8 text-xl">🔁 Redemption Round</button>
+                    <button id="review-button" class="btn btn-blue hidden py-3 px-8 text-xl">Review Mistakes</button>
+                </div>
+                <button id="main-menu-button" class="btn btn-ink mt-5 py-2 px-6 text-lg">Main Menu</button>
             </div>
+
             <div id="end-review-view" class="hidden text-left">
-                <h2 class="font-circus text-4xl text-center text-blue-600 mb-6">Your Mistakes</h2>
-                <div id="review-container" class="space-y-4 max-h-80 overflow-y-auto p-4 bg-gray-100 rounded-lg"></div>
-                <button id="back-to-score-button" class="w-full mt-6 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-6 rounded-lg text-lg shadow-md">
-                    Back to Score
-                </button>
+                <h2 class="font-poster text-3xl md:text-4xl text-center mb-5" style="color:var(--teal)">Your Mistakes</h2>
+                <div id="review-container" class="space-y-3 max-h-96 overflow-y-auto p-3 rounded-xl card-panel"></div>
+                <button id="back-to-score-button" class="btn btn-gold w-full mt-5 py-3 px-6 text-lg">Back to Score</button>
             </div>
-        </div>
+        </section>
     </div>
 
-    <!-- MODAL -->
-    <div id="modal-overlay" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-        <div id="feedback-modal-content" class="hidden bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center transform scale-95 transition-transform duration-300 flex flex-col items-center">
-            <div class="speech-bubble p-6 mb-4">
-                <h2 id="modal-title" class="text-3xl font-bold mb-2">Correct!</h2>
-                <p id="modal-explanation" class="text-gray-600"></p>
+    <!-- ============================ FEEDBACK MODAL (THE RINGMASTER) ============================ -->
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 opacity-0">
+        <div id="feedback-modal-content" class="modal-card max-w-lg w-full flex flex-col items-center">
+            <!-- Ringmaster figure on a spotlight, with a swinging nameplate -->
+            <div class="ringmaster-stage">
+                <div class="ring-disc h-28 w-28"><span class="mascot" id="modal-mascot" style="font-size:3.6rem">🎩</span></div>
+                <div class="ringmaster-nameplate font-poster">THE RINGMASTER</div>
             </div>
-            <div class="emoji-image w-32 h-32 bg-red-100 rounded-full border-4 border-white shadow-lg">🎩</div>
-            <button id="next-question-button" class="w-full mt-6 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-6 rounded-lg text-lg shadow-md transition-transform hover:scale-105">
-                Next Question
-            </button>
+
+            <!-- Speech bubble with verdict + usage explanation -->
+            <div class="speech-bubble p-5 mt-7 mb-4 w-full text-center">
+                <h2 id="modal-title" class="text-3xl font-bold mb-2 font-ui">Correct!</h2>
+                <p id="modal-explanation" class="font-ui" style="color:var(--ink)"></p>
+            </div>
+
+            <!-- Spelling-tip scroll: shown for EVERY answer -->
+            <div id="tip-scroll" class="tip-scroll w-full text-left mb-5">
+                <div class="tip-scroll-label font-ui">🎩 Ringmaster's Spelling Tip</div>
+                <p id="modal-tip" class="font-ui"></p>
+            </div>
+
+            <button id="next-question-button" class="btn btn-gold w-full py-3 px-6 text-lg">Next Question</button>
         </div>
     </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    'use strict';
 
-    // --- DOM Elements ---
-    const startScreen = document.getElementById('start-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const bossScreen = document.getElementById('boss-screen');
-    const endScreen = document.getElementById('end-screen');
-    const prizeWallScreen = document.getElementById('prize-wall-screen');
-    
-    // Buttons
-    const practiceButton = document.getElementById('practice-button');
-    const mainEventButton = document.getElementById('main-event-button');
-    const prizeWallButton = document.getElementById('prize-wall-button');
-    const backToMenuButton = document.getElementById('back-to-menu-button');
-    const playAgainButton = document.getElementById('play-again-button');
-    const mainMenuButton = document.getElementById('main-menu-button');
-    const nextQuestionButton = document.getElementById('next-question-button');
-    const clueCoinButton = document.getElementById('clue-coin-button');
-    const homeButton = document.getElementById('home-button');
+    // ======================================================================
+    //  CONFIG
+    // ======================================================================
+    const PRACTICE_COUNT = 10;
+    const MAIN_COUNT     = 20;               // total questions in Main Event
+    const MAIN_SPREAD    = { 1: 7, 2: 7, 3: 6 }; // difficulty mix for Main Event
+    const CLUE_EVERY     = 5;                // earn a clue coin every N in a row
+    const BOSS_WIN_ACCURACY = 0.5;           // accuracy needed to defeat the boss
 
-    // Game UI
-    const questionNumberEl = document.getElementById('question-number');
-    const totalQuestionsEl = document.getElementById('total-questions');
-    const scoreEl = document.getElementById('score');
-    const questionTextEl = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const clueCoinsEl = document.getElementById('clue-coins');
-    const cheerMeterFill = document.getElementById('cheer-meter-fill');
-    
-    // Boss Battle UI
-    const bossEmojiEl = document.getElementById('boss-emoji');
-    const tearContainer = document.getElementById('tear-container');
-    const playerPowerEl = document.getElementById('player-power');
-    const bossHealthEl = document.getElementById('boss-health');
-    const playerHealthBar = document.getElementById('player-health-bar');
-    const bossHealthBar = document.getElementById('boss-health-bar');
+    const reduceMotion = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // End Screen UI
-    const endScoreView = document.getElementById('end-score-view');
-    const endReviewView = document.getElementById('end-review-view');
-    const reviewButton = document.getElementById('review-button');
-    const backToScoreButton = document.getElementById('back-to-score-button');
-    const reviewContainer = document.getElementById('review-container');
-    const endTitle = document.getElementById('end-title');
-    const endMessage = document.getElementById('end-message');
-    const finalScoreEl = document.getElementById('final-score');
-    const ticketsEarnedEl = document.getElementById('tickets-earned');
-    
-    // Modal UI
-    const modalOverlay = document.getElementById('modal-overlay');
-    const feedbackModalContent = document.getElementById('feedback-modal-content');
-    const modalTitle = document.getElementById('modal-title');
-    const modalExplanation = document.getElementById('modal-explanation');
+    // ======================================================================
+    //  QUESTION BANK  (100 questions · circus themed · tagged by pair & level)
+    //  level: 1 = warm-up, 2 = center ring, 3 = high wire
+    // ======================================================================
+    const QUESTIONS = [
+        // ---------- LEVEL 1 : homophones & basic contractions ----------
+        { pair:"their / there / they're", level:1, question:"The acrobats say ______ ready for the grand finale.", options:["their","there","they're"], correct:2, explanation:"“They're” is a contraction of “they are.” “Their” shows ownership and “there” points to a place." },
+        { pair:"their / there / they're", level:1, question:"The clowns parked ______ tiny car beside the tent.", options:["their","there","they're"], correct:0, explanation:"“Their” is possessive — the car belongs to the clowns." },
+        { pair:"their / there / they're", level:1, question:"Set the elephant's peanuts over ______ by the ring.", options:["their","there","they're"], correct:1, explanation:"“There” indicates a location." },
+        { pair:"your / you're", level:1, question:"Grab ______ ticket before the show begins!", options:["your","you're"], correct:0, explanation:"“Your” shows possession. “You're” means “you are.”" },
+        { pair:"your / you're", level:1, question:"______ going to love the flying trapeze act.", options:["Your","You're"], correct:1, explanation:"“You're” is short for “you are.”" },
+        { pair:"its / it's", level:1, question:"The seal balanced the ball on ______ nose.", options:["its","it's"], correct:0, explanation:"“Its” is possessive. “It's” means “it is.”" },
+        { pair:"its / it's", level:1, question:"______ almost time for the cannon to fire!", options:["Its","It's"], correct:1, explanation:"“It's” is a contraction of “it is.”" },
+        { pair:"to / too / two", level:1, question:"The strongman lifted ______ barbells at once.", options:["to","too","two"], correct:2, explanation:"“Two” is the number 2." },
+        { pair:"to / too / two", level:1, question:"That popcorn is ______ salty for the monkey.", options:["to","too","two"], correct:1, explanation:"“Too” means “excessively” or “also.”" },
+        { pair:"to / too / two", level:1, question:"The ringmaster strode ______ the center of the ring.", options:["to","too","two"], correct:0, explanation:"“To” is a preposition showing direction." },
+        { pair:"then / than", level:1, question:"First the lions roar, and ______ they leap through the hoop.", options:["then","than"], correct:0, explanation:"“Then” refers to time or sequence." },
+        { pair:"then / than", level:1, question:"The high wire is taller ______ the trapeze.", options:["then","than"], correct:1, explanation:"“Than” is used for comparisons." },
+        { pair:"here / hear", level:1, question:"Can you ______ the drumroll before the big jump?", options:["here","hear"], correct:1, explanation:"“Hear” is what you do with your ears. “Here” is a place." },
+        { pair:"here / hear", level:1, question:"The best seats are right ______ in the front row.", options:["here","hear"], correct:0, explanation:"“Here” refers to this place." },
+        { pair:"knew / new", level:1, question:"The juggler ______ exactly how to catch all five pins.", options:["knew","new"], correct:0, explanation:"“Knew” is the past tense of “know.”" },
+        { pair:"knew / new", level:1, question:"The circus unveiled a ______ high-wire act tonight.", options:["knew","new"], correct:1, explanation:"“New” means recent or not old." },
+        { pair:"hole / whole", level:1, question:"The clown fell through a ______ in the trampoline.", options:["hole","whole"], correct:0, explanation:"A “hole” is an opening. “Whole” means complete." },
+        { pair:"hole / whole", level:1, question:"The ______ audience gasped at the fire-breather.", options:["hole","whole"], correct:1, explanation:"“Whole” means entire or complete." },
+        { pair:"weak / week", level:1, question:"After a ______ of rehearsals, the acrobats were exhausted.", options:["weak","week"], correct:1, explanation:"A “week” is seven days. “Weak” means not strong." },
+        { pair:"weak / week", level:1, question:"The frayed rope looked too ______ to hold the strongman.", options:["weak","week"], correct:0, explanation:"“Weak” means lacking strength." },
+        { pair:"threw / through", level:1, question:"The magician ______ his cape into the air.", options:["threw","through"], correct:0, explanation:"“Threw” is the past tense of “throw.”" },
+        { pair:"threw / through", level:1, question:"The lion leaped ______ the flaming hoop.", options:["threw","through"], correct:1, explanation:"“Through” means moving in one side and out the other." },
+        { pair:"brake / break", level:1, question:"The runaway unicycle has no ______, so the clown just crashes.", options:["brake","break"], correct:0, explanation:"A “brake” stops a vehicle. A “break” is a pause or a crack." },
+        { pair:"brake / break", level:1, question:"The performers take a short ______ between acts.", options:["brake","break"], correct:1, explanation:"A “break” is a rest or pause." },
+        { pair:"wait / weight", level:1, question:"The trapeze artist checked the ______ of the safety net.", options:["wait","weight"], correct:1, explanation:"“Weight” is how heavy something is. “Wait” means to stay until something happens." },
+        { pair:"wait / weight", level:1, question:"You must ______ your turn to ride the elephant.", options:["wait","weight"], correct:0, explanation:"“Wait” means to pause for your turn." },
+        { pair:"peace / piece", level:1, question:"The mime performed in complete ______ and silence.", options:["peace","piece"], correct:0, explanation:"“Peace” means calm or quiet. A “piece” is a part of something." },
+        { pair:"peace / piece", level:1, question:"The clown gobbled one ______ of cotton candy.", options:["peace","piece"], correct:1, explanation:"A “piece” is a portion or part." },
+        { pair:"plain / plane", level:1, question:"The daredevil parachuted from a ______ above the big top.", options:["plain","plane"], correct:1, explanation:"A “plane” is an aircraft. “Plain” means simple or an open field." },
+        { pair:"plain / plane", level:1, question:"The ringmaster's sparkling costume was anything but ______.", options:["plain","plane"], correct:0, explanation:"“Plain” means ordinary or undecorated." },
 
-    // Prize Wall UI
-    const ticketCounterEl = document.getElementById('ticket-counter');
-    const prizeContainer = document.getElementById('prize-container');
+        // ---------- LEVEL 2 : usage & trickier pairs ----------
+        { pair:"affect / effect", level:2, question:"The dazzling lights had a magical ______ on the crowd.", options:["affect","effect"], correct:1, explanation:"“Effect” is a noun meaning a result. “Affect” is usually a verb meaning to influence." },
+        { pair:"affect / effect", level:2, question:"Loud noises can ______ the nervous circus horses.", options:["affect","effect"], correct:0, explanation:"“Affect” is a verb meaning to influence or change." },
+        { pair:"fewer / less", level:2, question:"There are ______ tigers in the act this year.", options:["fewer","less"], correct:0, explanation:"Use “fewer” for things you can count (tigers)." },
+        { pair:"fewer / less", level:2, question:"The clown used ______ confetti than last time.", options:["fewer","less"], correct:1, explanation:"Use “less” for amounts you cannot count (confetti)." },
+        { pair:"lie / lay", level:2, question:"The tired lion likes to ______ down after the show.", options:["lie","lay"], correct:0, explanation:"“Lie” means to recline and takes no object. “Lay” means to place something." },
+        { pair:"lie / lay", level:2, question:"Please ______ the juggling pins on the table.", options:["lie","lay"], correct:1, explanation:"“Lay” means to put something down and needs an object (the pins)." },
+        { pair:"farther / further", level:2, question:"The human cannonball flew ______ than ever before.", options:["farther","further"], correct:0, explanation:"“Farther” refers to physical distance." },
+        { pair:"farther / further", level:2, question:"The ringmaster refused to discuss the matter any ______.", options:["farther","further"], correct:1, explanation:"“Further” refers to figurative or additional degree." },
+        { pair:"accept / except", level:2, question:"Everyone clapped ______ the grumpy clown.", options:["accept","except"], correct:1, explanation:"“Except” means “not including.”" },
+        { pair:"accept / except", level:2, question:"The magician will ______ one volunteer from the crowd.", options:["accept","except"], correct:0, explanation:"“Accept” means to receive or take willingly." },
+        { pair:"who / whom", level:2, question:"The acrobat ______ soared through the air amazed everyone.", options:["who","whom"], correct:0, explanation:"Use “who” for the subject doing the action (soaring)." },
+        { pair:"who / whom", level:2, question:"To ______ should I give this front-row ticket?", options:["who","whom"], correct:1, explanation:"Use “whom” as the object. Trick: if you can answer with “him/her,” use “whom.”" },
+        { pair:"bring / take", level:2, question:"Please ______ the popcorn over here to my seat.", options:["bring","take"], correct:0, explanation:"“Bring” moves something toward the speaker." },
+        { pair:"bring / take", level:2, question:"The clowns will ______ the props away after the finale.", options:["bring","take"], correct:1, explanation:"“Take” moves something away from the speaker." },
+        { pair:"good / well", level:2, question:"The trapeze artist performed very ______ tonight.", options:["good","well"], correct:1, explanation:"“Well” is an adverb describing how an action is done." },
+        { pair:"good / well", level:2, question:"“That was a ______ show!” cheered the child.", options:["good","well"], correct:0, explanation:"“Good” is an adjective describing a noun (the show)." },
+        { pair:"advice / advise", level:2, question:"The veteran clown gave the rookie some ______.", options:["advice","advise"], correct:0, explanation:"“Advice” is a noun — a recommendation." },
+        { pair:"advice / advise", level:2, question:"I would ______ you not to pet the tigers.", options:["advice","advise"], correct:1, explanation:"“Advise” is a verb — the act of recommending." },
+        { pair:"loose / lose", level:2, question:"The clown's giant shoes were far too ______.", options:["loose","lose"], correct:0, explanation:"“Loose” is an adjective meaning not tight." },
+        { pair:"loose / lose", level:2, question:"Don't ______ your ticket stub before the raffle!", options:["loose","lose"], correct:1, explanation:"“Lose” is a verb meaning to misplace or fail to keep." },
+        { pair:"passed / past", level:2, question:"The parade ______ right by the popcorn stand.", options:["passed","past"], correct:0, explanation:"“Passed” is the past tense verb of “pass.”" },
+        { pair:"passed / past", level:2, question:"In summers ______, the circus visited every year.", options:["passed","past"], correct:1, explanation:"“Past” works as a noun or adjective referring to earlier time." },
+        { pair:"lead / led", level:2, question:"The ringmaster ______ the parade into the tent last night.", options:["lead","led"], correct:1, explanation:"“Led” is the past tense of the verb “lead.”" },
+        { pair:"lead / led", level:2, question:"A brass band will ______ the grand parade tomorrow.", options:["lead","led"], correct:0, explanation:"“Lead” (rhymes with “feed”) is the present-tense verb." },
+        { pair:"quiet / quite", level:2, question:"The audience grew ______ as the tightrope walker began.", options:["quiet","quite"], correct:0, explanation:"“Quiet” means making little noise." },
+        { pair:"quiet / quite", level:2, question:"The fire-breather's act was ______ spectacular.", options:["quiet","quite"], correct:1, explanation:"“Quite” means very or completely." },
+        { pair:"weather / whether", level:2, question:"The ringmaster wondered ______ to cancel the outdoor show.", options:["weather","whether"], correct:1, explanation:"“Whether” introduces a choice between possibilities." },
+        { pair:"weather / whether", level:2, question:"Stormy ______ forced the circus indoors.", options:["weather","whether"], correct:0, explanation:"“Weather” is the state of the atmosphere." },
+        { pair:"whose / who's", level:2, question:"______ juggling pin is this on the floor?", options:["Whose","Who's"], correct:0, explanation:"“Whose” shows possession." },
+        { pair:"whose / who's", level:2, question:"______ ready for the flying trapeze?", options:["Whose","Who's"], correct:1, explanation:"“Who's” is a contraction of “who is.”" },
+        { pair:"breath / breathe", level:2, question:"The sword-swallower took a slow, deep ______.", options:["breath","breathe"], correct:0, explanation:"“Breath” is the noun (rhymes with “death”)." },
+        { pair:"breath / breathe", level:2, question:"It's hard to ______ inside the padded clown costume.", options:["breath","breathe"], correct:1, explanation:"“Breathe” is the verb (rhymes with “seethe”)." },
+        { pair:"desert / dessert", level:2, question:"After the show, the clowns shared a sweet ______.", options:["desert","dessert"], correct:1, explanation:"“Dessert” is the sweet treat — remember its two S's for “so sweet.”" },
+        { pair:"desert / dessert", level:2, question:"The caravan crossed a dusty ______ to reach the next town.", options:["desert","dessert"], correct:0, explanation:"A “desert” is a dry, sandy region." },
+        { pair:"sit / set", level:2, question:"Please ______ your drink on the bench before the ride.", options:["sit","set"], correct:1, explanation:"“Set” means to place something (and needs an object)." },
+        { pair:"sit / set", level:2, question:"The audience will ______ quietly during the magic act.", options:["sit","set"], correct:0, explanation:"“Sit” means to take a seat." },
+        { pair:"stationary / stationery", level:2, question:"The unicycle stayed perfectly ______ while balanced.", options:["stationary","stationery"], correct:0, explanation:"“Stationary” means not moving." },
+        { pair:"stationary / stationery", level:2, question:"The ringmaster wrote invitations on gold ______.", options:["stationary","stationery"], correct:1, explanation:"“Stationery” is writing paper — the “e” links to “envelope.”" },
+        { pair:"aloud / allowed", level:2, question:"The crowd cheered ______ when the acrobat stuck the landing.", options:["aloud","allowed"], correct:0, explanation:"“Aloud” means out loud. “Allowed” means permitted." },
+        { pair:"aloud / allowed", level:2, question:"No cameras are ______ inside the mirror maze.", options:["aloud","allowed"], correct:1, explanation:"“Allowed” means permitted." },
 
-    // --- Game State & Data ---
+        // ---------- LEVEL 3 : high wire / advanced ----------
+        { pair:"allusion / illusion", level:3, question:"The magician's vanishing act was a clever ______.", options:["allusion","illusion"], correct:1, explanation:"An “illusion” is a false or misleading appearance." },
+        { pair:"allusion / illusion", level:3, question:"The ringmaster's speech made an ______ to ancient Rome.", options:["allusion","illusion"], correct:0, explanation:"An “allusion” is an indirect reference to something." },
+        { pair:"compliment / complement", level:3, question:"The gold trim was the perfect ______ to the red tent.", options:["compliment","complement"], correct:1, explanation:"“Complement” means something that completes or pairs well." },
+        { pair:"compliment / complement", level:3, question:"The acrobat blushed at the kind ______ from the crowd.", options:["compliment","complement"], correct:0, explanation:"A “compliment” is praise." },
+        { pair:"principal / principle", level:3, question:"Honesty is the guiding ______ of the ringmaster.", options:["principal","principle"], correct:1, explanation:"A “principle” is a rule or belief." },
+        { pair:"principal / principle", level:3, question:"The ______ attraction tonight is the flying trapeze.", options:["principal","principle"], correct:0, explanation:"“Principal” means main or most important." },
+        { pair:"discreet / discrete", level:3, question:"The magician kept his secret method ______.", options:["discreet","discrete"], correct:0, explanation:"“Discreet” means careful or private." },
+        { pair:"discreet / discrete", level:3, question:"The show is divided into three ______ acts.", options:["discreet","discrete"], correct:1, explanation:"“Discrete” means separate and distinct." },
+        { pair:"capital / capitol", level:3, question:"The circus performed near the state ______ building where laws are made.", options:["capital","capitol"], correct:1, explanation:"“Capitol” is the specific lawmaking building." },
+        { pair:"capital / capitol", level:3, question:"The circus needs plenty of ______ to buy new tents.", options:["capital","capitol"], correct:0, explanation:"“Capital” can mean money, a major city, or an uppercase letter." },
+        { pair:"elicit / illicit", level:3, question:"The clowns tried to ______ a laugh from the quiet crowd.", options:["elicit","illicit"], correct:0, explanation:"“Elicit” means to draw out a response." },
+        { pair:"elicit / illicit", level:3, question:"Sneaking in without a ticket is an ______ way to see the show.", options:["elicit","illicit"], correct:1, explanation:"“Illicit” means illegal or forbidden." },
+        { pair:"assure / ensure / insure", level:3, question:"I ______ you the tightrope walker is perfectly safe.", options:["assure","ensure","insure"], correct:0, explanation:"“Assure” means to tell someone confidently to remove doubt." },
+        { pair:"assure / ensure / insure", level:3, question:"Safety nets ______ that no performer gets hurt.", options:["assure","ensure","insure"], correct:1, explanation:"“Ensure” means to make certain something happens." },
+        { pair:"assure / ensure / insure", level:3, question:"The circus paid to ______ its tents against fire damage.", options:["assure","ensure","insure"], correct:2, explanation:"“Insure” means to protect financially with insurance." },
+        { pair:"imply / infer", level:3, question:"From the ringmaster's wink, we could ______ a surprise was coming.", options:["imply","infer"], correct:1, explanation:"Listeners/readers “infer” — they deduce meaning from clues." },
+        { pair:"imply / infer", level:3, question:"The magician's sly grin seemed to ______ he had a trick ready.", options:["imply","infer"], correct:0, explanation:"Speakers/actions “imply” — they hint at meaning." },
+        { pair:"everyday / every day", level:3, question:"Facing a den of lions is not an ______ task.", options:["everyday","every day"], correct:0, explanation:"“Everyday” (one word) is an adjective meaning ordinary." },
+        { pair:"everyday / every day", level:3, question:"The acrobats rehearse ______ before the show.", options:["everyday","every day"], correct:1, explanation:"“Every day” (two words) means each day." },
+        { pair:"altogether / all together", level:3, question:"The clowns squeezed ______ into the tiny car.", options:["altogether","all together"], correct:1, explanation:"“All together” means everyone in a group at once." },
+        { pair:"altogether / all together", level:3, question:"That flaming stunt was ______ too risky.", options:["altogether","all together"], correct:0, explanation:"“Altogether” means completely or entirely." },
+        { pair:"eminent / imminent", level:3, question:"With storm clouds gathering, rain seemed ______.", options:["eminent","imminent"], correct:1, explanation:"“Imminent” means about to happen." },
+        { pair:"eminent / imminent", level:3, question:"The ______ magician was famous around the world.", options:["eminent","imminent"], correct:0, explanation:"“Eminent” means distinguished or well-known." },
+        { pair:"precede / proceed", level:3, question:"A booming drumroll will ______ the cannon blast.", options:["precede","proceed"], correct:0, explanation:"“Precede” means to come before." },
+        { pair:"precede / proceed", level:3, question:"After intermission, the show will ______ as planned.", options:["precede","proceed"], correct:1, explanation:"“Proceed” means to continue or go forward." },
+        { pair:"council / counsel", level:3, question:"The circus ______ voted to add a new trapeze act.", options:["council","counsel"], correct:0, explanation:"A “council” is a group that makes decisions." },
+        { pair:"council / counsel", level:3, question:"The wise ringmaster offered the rookie some gentle ______.", options:["council","counsel"], correct:1, explanation:"“Counsel” means advice (or to give advice)." },
+        { pair:"conscience / conscious", level:3, question:"The clown's guilty ______ made him return the extra ticket.", options:["conscience","conscious"], correct:0, explanation:"“Conscience” is your inner sense of right and wrong." },
+        { pair:"conscience / conscious", level:3, question:"The acrobat stayed ______ despite the dizzying spins.", options:["conscience","conscious"], correct:1, explanation:"“Conscious” means awake and aware." },
+        { pair:"moral / morale", level:3, question:"The troupe's ______ soared after the standing ovation.", options:["moral","morale"], correct:1, explanation:"“Morale” (mor-AL) means group spirit or confidence." },
+        { pair:"moral / morale", level:3, question:"Every good circus tale teaches a ______ lesson.", options:["moral","morale"], correct:0, explanation:"“Moral” refers to a lesson about right and wrong." },
+        { pair:"coarse / course", level:3, question:"The high wire's safety line was thick and ______.", options:["coarse","course"], correct:0, explanation:"“Coarse” means rough in texture." },
+        { pair:"coarse / course", level:3, question:"Of ______, the lion tamer bowed to the roaring crowd.", options:["coarse","course"], correct:1, explanation:"“Course” appears in “of course” and means a path or class." },
+        { pair:"personal / personnel", level:3, question:"The trapeze artist keeps a ______ diary of every stunt.", options:["personal","personnel"], correct:0, explanation:"“Personal” means belonging to one individual." },
+        { pair:"personal / personnel", level:3, question:"The circus hired more ______ to run the concession stands.", options:["personal","personnel"], correct:1, explanation:"“Personnel” means the staff or employees." },
+        { pair:"device / devise", level:3, question:"The inventor built a strange juggling ______.", options:["device","devise"], correct:0, explanation:"“Device” is a noun — a gadget or tool." },
+        { pair:"device / devise", level:3, question:"The clowns had to ______ a clever new escape plan.", options:["device","devise"], correct:1, explanation:"“Devise” is a verb meaning to invent or plan." },
+        { pair:"cite / site / sight", level:3, question:"The towering big top was a breathtaking ______.", options:["cite","site","sight"], correct:2, explanation:"“Sight” is something you see." },
+        { pair:"cite / site / sight", level:3, question:"The crew cleared the empty ______ for the new tent.", options:["cite","site","sight"], correct:1, explanation:"A “site” is a location or place." },
+        { pair:"cite / site / sight", level:3, question:"In her report, the ringmaster had to ______ her sources.", options:["cite","site","sight"], correct:0, explanation:"“Cite” means to quote or refer to a source." }
+    ];
+
+    const ALL_BOSSES = [
+        { emoji:'🤡', cost:0,  name:'Sad Clown',       blurb:"The starter act — always in the ring.", taunt:"My tears will drown your grammar!" },
+        { emoji:'🦁', cost:12, name:'Roaring Lion',    blurb:"King of the center ring.",            taunt:"ROAR! Your commas cannot save you!" },
+        { emoji:'🧙', cost:25, name:'Mighty Magician',  blurb:"Now you see the answer... now you don't.", taunt:"Now you see your score... now you don't!" },
+        { emoji:'👽', cost:40, name:'Cosmic Alien',     blurb:"Beamed in from planet Homophone.",   taunt:"On my planet, 'their' and 'there' are the same. Prove me wrong!" },
+        { emoji:'🤖', cost:55, name:'Rogue Robot',      blurb:"Runs on pure misplaced apostrophes.", taunt:"ERROR. HUMAN.GRAMMAR = FLAWED." },
+        { emoji:'👻', cost:70, name:'Gleeful Ghost',    blurb:"Haunts the house of homophones.",     taunt:"Boo! I'll haunt your homophones forever!" },
+        { emoji:'🐉', cost:90, name:'Grammar Dragon',   blurb:"The ultimate high-wire challenge.",   taunt:"I've hoarded misused words for a thousand years!" }
+    ];
+
+    // Ringside upgrades — purchasable boosts stored in prizes.upgrades
+    const UPGRADES = [
+        {
+            id: 'extraClue', emoji: '🪙', title: 'Golden Clue Coin',
+            desc: 'Start every game with an extra Clue Coin (removes one wrong option).',
+            costs: [30, 55, 85], max: 3
+        }
+    ];
+
+    // ======================================================================
+    //  RINGMASTER'S SPELLING TIPS  (one memorable trick per word-pair)
+    // ======================================================================
+    const TIPS = {
+        "their / there / they're": "“Tent trick: THERE hides the word HERE (a place). THEY'RE = they + are. THEIR has an HEIR — and an heir owns things.”",
+        "your / you're": "“Whisper the sentence with ‘you are.’ If it still makes sense, use the apostrophe one: YOU'RE.”",
+        "its / it's": "“IT'S always unpacks to ‘it is’ or ‘it has.’ No apostrophe = ownership, just like HIS.”",
+        "to / too / two": "“TOO has one extra O — it means ‘also’ or ‘too much’ (extra!). TWO is the number (twins). TO is everything left over.”",
+        "then / than": "“THEN tells time — both have an E, like nExt. THAN compares — both have an A, like bAlance.”",
+        "here / hear": "“You HEAR with your EAR — the word ear is hiding right inside it.”",
+        "knew / new": "“KNEW is what you KNOW (both keep the silent k-n). NEW is brand-new, nothing extra.”",
+        "hole / whole": "“The W in WHOLE makes it the Whole thing — all of it. A HOLE is just empty space.”",
+        "weak / week": "“A WEEK has days that ‘eek’ by. WEAK rhymes with ‘peak’ — the opposite of strong.”",
+        "threw / through": "“THREW is what you do to a ball (throw → threw). THROUGH is the long one that goes all the way thr-ough.”",
+        "brake / break": "“A BRAKE helps you make a stop (brake/make rhyme). To BREAK is to smash — or take a rest.”",
+        "wait / weight": "“WEIGHT has EIGHT hiding inside — eight heavy pounds. WAIT is just biding time.”",
+        "peace / piece": "“A PIECE of PIE — both start P-I-E. PEACE is calm and quiet.”",
+        "plain / plane": "“A PLANE flies (think airplANE). PLAIN means simple, or a flat grassy field.”",
+        "affect / effect": "“RAVEN: Affect is a Verb (an Action), Effect is a Noun (the End result). A affects the E-nd effect.”",
+        "fewer / less": "“Use FEWER for things you can count (fewer clowns). Use LESS for amounts you can't (less confetti).”",
+        "lie / lay": "“You LAY something down (it needs an object). You LIE down all by yourself (no object).”",
+        "farther / further": "“FARTHER is physical distance — it has FAR in it. FURTHER is figurative — further ideas, further discussion.”",
+        "accept / except": "“ACcept = to take in (like Acquire). EXcept = to leave out (like EXit).”",
+        "who / whom": "“If you could answer with HIM, use WHOM — both end in M. ‘To whom? To him.’”",
+        "bring / take": "“BRING it toward you (bring it here). TAKE it away (take it there).”",
+        "good / well": "“GOOD describes a thing (a good act). WELL describes how you do something (you juggle well).”",
+        "advice / advise": "“ADVICE with a C is the noun — a thing you get. ADVISE with an S (a ‘z’ buzz) is the action of giving it.”",
+        "loose / lose": "“LOOSE has room for two O's — it's baggy and loose. LOSE has just one O — you lost the other!”",
+        "passed / past": "“PASSED is a verb — the past tense of pass (she passed the tent). PAST is a time or place (walked past it).”",
+        "lead / led": "“LED (l-e-d) is the past tense — short and done. LEAD is to guide now (or the heavy metal).”",
+        "quiet / quite": "“QUIET means silent — sneak the E in before the T (qui-ET, like a pet resting). QUITE means very, and rhymes with bite.”",
+        "weather / whether": "“WEATHER is sun and rain — you WEAR a coat for it. WHETHER is an if/or choice, like ‘either.’”",
+        "whose / who's": "“WHO'S = who is / who has. WHOSE shows ownership — think ‘those’: no apostrophe, but it owns.”",
+        "breath / breathe": "“BREATHE with an E is the action — a long deep e-e-e. BREATH (no E) is one single puff.”",
+        "desert / dessert": "“DESSERT has two S's because you want a Second Serving. The DESERT (sand) has just one.”",
+        "sit / set": "“You SIT yourself down (no object). You SET an object down (set the popcorn here).”",
+        "stationary / stationery": "“StationERy = papER and Envelopes (E for envelope). StationARy = standing still, not moving.”",
+        "aloud / allowed": "“ALOUD means out LOUD — the word loud is right inside. ALLOWED means permitted (to allow).”",
+        "allusion / illusion": "“An ALLUSION alludes — it points to something (a hint). An ILLUSION fools your eyes, like a magician's trick.”",
+        "compliment / complement": "“ComplIment = ‘I like your act!’ (the I is you praising). ComplEment complEtes something (both have E).”",
+        "principal / principle": "“The principAL is your PAL — the head of the school. A principLE is a ruLE — both end in -le.”",
+        "discreet / discrete": "“DISCREET = careful and quiet — the two E's huddle close, keeping a secret. DISCRETE = separate — the T splits the E's apart.”",
+        "capital / capitol": "“The capitOl with an O is the dOmed building (round like an O). The city, the money, and big letters all use capitAl.”",
+        "elicit / illicit": "“ELICIT = to draw out a response (E for Extract). ILLICIT = illegal — it starts with ILL, like ‘illegal.’”",
+        "assure / ensure / insure": "“ASSURE a person (‘I assure you’). ENSURE a result (make certain). INSURE with money (insurance).”",
+        "imply / infer": "“The speaker IMPLIES — hints go OUT. The listener INFERS — clues come IN. Imply-out, Infer-in.”",
+        "everyday / every day": "“One word EVERYDAY = ordinary (an everyday hat). Two words EVERY DAY = each single day.”",
+        "altogether / all together": "“One word ALTOGETHER = completely (altogether amazing). Two words ALL TOGETHER = everyone as a group.”",
+        "eminent / imminent": "“EMINENT = famous and respected (an eminent ringmaster). IMMINENT = about to happen — any MINute now (min!).”",
+        "precede / proceed": "“PRECEDE = to come before (PRE = before). PROCEED = to go forward — the double-E means ‘keep going.’”",
+        "council / counsel": "“A COUNCIL is a group that meets (a city counCIL). To COUNSEL is to advise (a counSELor gives counsel).”",
+        "conscience / conscious": "“Your CONSCIENCE has SCIENCE in it — your inner science of right and wrong. CONSCIOUS means awake and aware.”",
+        "moral / morale": "“The MORAL is the lesson of the story. MORALE (with an E) is team spirit — low morale, low energy.”",
+        "coarse / course": "“COARSE means rough, like sandpaper (both have an A). COURSE is a class or a path — ‘of course’ it's OURS.”",
+        "personal / personnel": "“PERSONAL = private, your own (one N). PERSONNEL = the staff — lots of people, so it gets an extra N.”",
+        "device / devise": "“A deviCe with a C is the noun — a gadget you hold. To deviSe (a ‘z’ buzz) is the verb — to plan it out.”",
+        "cite / site / sight": "“CITE a source (citation). A SITE is a place (a website or building site). SIGHT is what you see — it has ‘igh’ like LIGHT.”"
+    };
+    // Stable id per question = its position in QUESTIONS (used by the replay/Tricky-Words bank)
+    QUESTIONS.forEach((q, i) => { q.id = i; });
+
+    // ======================================================================
+    //  STATE
+    // ======================================================================
     let score = 0;
     let currentQuestionIndex = 0;
     let consecutiveCorrect = 0;
+    let bestStreak = 0;
     let clueCoins = 0;
     let cheerLevel = 0;
+    let correctCount = 0;
+    let answeredThisQuestion = false;
     let wrongAnswers = [];
+    let sessionMissIds = [];
     let currentGameMode = null;
+    let selectedDifficulty = 0;   // 0 = all levels
     let gameQuestions = [];
 
-    // --- Persistent Data (Saved in Browser) ---
-    let tickets = localStorage.getItem('circusTickets') ? parseInt(localStorage.getItem('circusTickets')) : 0;
-    let prizes = localStorage.getItem('circusPrizes') ? JSON.parse(localStorage.getItem('circusPrizes')) : {
-        selectedBoss: '🤡',
-        unlockedBosses: ['🤡']
-    };
-    const ALL_BOSSES = [
-        { emoji: '🤡', cost: 0, name: 'Sad Clown' },
-        { emoji: '🦁', cost: 12, name: 'Roaring Lion' },
-        { emoji: '🧙', cost: 25, name: 'Mighty Magician' },
-        { emoji: '👽', cost: 50, name: 'Cosmic Alien' },
-        { emoji: '🤖', cost: 62, name: 'Rogue Robot' },
-        { emoji: '👻', cost: 75, name: 'Gleeful Ghost' },
-    ];
+    // Safe storage: falls back to in-memory if localStorage is blocked
+    // (sandboxed iframes, some file:// contexts, private-mode quirks).
+    const safeStorage = (() => {
+        const mem = {};
+        let ok = true;
+        try { const k='__c'; window.localStorage.setItem(k,'1'); window.localStorage.removeItem(k); }
+        catch (e) { ok = false; }
+        return {
+            get(key) { try { return ok ? window.localStorage.getItem(key) : (mem[key] ?? null); }
+                       catch (e) { return mem[key] ?? null; } },
+            set(key, val) { mem[key] = val; try { if (ok) window.localStorage.setItem(key, val); } catch (e) {} }
+        };
+    })();
 
+    // Persistent data (backward compatible with the original save keys)
+    let tickets = parseInt(safeStorage.get('circusTickets') || '0', 10) || 0;
+    let prizes;
+    try {
+        prizes = JSON.parse(safeStorage.get('circusPrizes')) || { selectedBoss:'🤡', unlockedBosses:['🤡'] };
+    } catch (e) {
+        prizes = { selectedBoss:'🤡', unlockedBosses:['🤡'] };
+    }
+    if (!Array.isArray(prizes.unlockedBosses)) prizes.unlockedBosses = ['🤡'];
+    if (!prizes.selectedBoss) prizes.selectedBoss = '🤡';
+    if (!prizes.upgrades || typeof prizes.upgrades !== 'object') prizes.upgrades = { extraClue: 0 };
+    if (typeof prizes.upgrades.extraClue !== 'number') prizes.upgrades.extraClue = 0;
 
-    // --- Sound Effects ---
+    let stats;
+    try {
+        stats = JSON.parse(safeStorage.get('circusStats')) || { bestMain:0, bestPractice:0, played:0 };
+    } catch (e) { stats = { bestMain:0, bestPractice:0, played:0 }; }
+
+    // Persistent "Tricky Words" bank: ids of questions missed and not yet re-mastered
+    let missBank;
+    try {
+        missBank = JSON.parse(safeStorage.get('circusMisses')) || [];
+    } catch (e) { missBank = []; }
+    if (!Array.isArray(missBank)) missBank = [];
+    // keep only valid ids
+    missBank = missBank.filter(id => Number.isInteger(id) && id >= 0 && id < QUESTIONS.length);
+
+    function addMiss(id) {
+        if (!missBank.includes(id)) { missBank.push(id); saveMisses(); }
+    }
+    function clearMiss(id) {
+        const i = missBank.indexOf(id);
+        if (i !== -1) { missBank.splice(i, 1); saveMisses(); }
+    }
+    function saveMisses() { safeStorage.set('circusMisses', JSON.stringify(missBank)); }
+
+    // ======================================================================
+    //  DOM
+    // ======================================================================
+    const $ = id => document.getElementById(id);
+    const startScreen = $('start-screen');
+    const gameScreen = $('game-screen');
+    const bossScreen = $('boss-screen');
+    const endScreen = $('end-screen');
+    const prizeWallScreen = $('prize-wall-screen');
+
+    const practiceButton = $('practice-button');
+    const mainEventButton = $('main-event-button');
+    const prizeWallButton = $('prize-wall-button');
+    const trickyWordsButton = $('tricky-words-button');
+    const trickyCountBadge = $('tricky-count-badge');
+    const trickyHint = $('tricky-hint');
+    const redemptionButton = $('redemption-button');
+    const backToMenuButton = $('back-to-menu-button');
+    const playAgainButton = $('play-again-button');
+    const mainMenuButton = $('main-menu-button');
+    const nextQuestionButton = $('next-question-button');
+    const clueCoinButton = $('clue-coin-button');
+    const homeButton = $('home-button');
+    const toggleAnimationButton = $('toggle-animation-button');
+
+    const questionNumberEl = $('question-number');
+    const totalQuestionsEl = $('total-questions');
+    const scoreEl = $('score');
+    const questionTextEl = $('question-text');
+    const questionPoster = $('question-poster');
+    const optionsContainer = $('options-container');
+    const clueCoinsEl = $('clue-coins');
+    const cheerMeterFill = $('cheer-meter-fill');
+    const progressFill = $('progress-fill');
+    const pairTag = $('pair-tag');
+    const streakBadge = $('streak-badge');
+    const streakCount = $('streak-count');
+
+    const bossEmojiEl = $('boss-emoji');
+    const playerChampEl = $('player-champ');
+    const battleArena = $('battle-arena');
+    const battleLog = $('battle-log');
+    const bossTagline = $('boss-tagline');
+    const playerPowerEl = $('player-power');
+    const bossHealthEl = $('boss-health');
+    const playerHealthBar = $('player-health-bar');
+    const bossHealthBar = $('boss-health-bar');
+
+    const endScoreView = $('end-score-view');
+    const endReviewView = $('end-review-view');
+    const reviewButton = $('review-button');
+    const backToScoreButton = $('back-to-score-button');
+    const reviewContainer = $('review-container');
+    const endTitle = $('end-title');
+    const endMessage = $('end-message');
+    const finalScoreEl = $('final-score');
+    const finalAccuracyEl = $('final-accuracy');
+    const ticketsEarnedEl = $('tickets-earned');
+    const bestNoteEl = $('best-note');
+    const endMascot = $('end-mascot');
+    const startMascot = $('start-mascot');
+
+    const modalOverlay = $('modal-overlay');
+    const feedbackModalContent = $('feedback-modal-content');
+    const modalTitle = $('modal-title');
+    const modalExplanation = $('modal-explanation');
+    const modalTip = $('modal-tip');
+    const modalMascot = $('modal-mascot');
+
+    const ticketCounterEl = $('ticket-counter');
+    const prizeContainer = $('prize-container');
+    const upgradeContainer = $('upgrade-container');
+    const recruitProgress = $('recruit-progress');
+    const spotlightEmoji = $('spotlight-emoji');
+    const spotlightName = $('spotlight-name');
+    const spotlightTaunt = $('spotlight-taunt');
+    const confettiLayer = $('confetti-layer');
+
+    // ======================================================================
+    //  DECORATIVE BUILD (bunting + marquee bulbs)
+    // ======================================================================
+    (function buildBunting() {
+        const colors = ['#C21E28','#F4B41A','#14868C','#FBF1DC','#E23744'];
+        const bunting = $('bunting');
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'pennant';
+            p.style.background = colors[i % colors.length];
+            bunting.appendChild(p);
+        }
+    })();
+
+    (function buildMarqueeBulbs() {
+        const wrap = $('marquee-bulbs');
+        const perSide = 10;
+        const place = (xPct, yPct, delay) => {
+            const b = document.createElement('span');
+            b.className = 'bulb';
+            b.style.left = xPct + '%';
+            b.style.top = yPct + '%';
+            b.style.animationDelay = delay + 's';
+            wrap.appendChild(b);
+        };
+        for (let i = 0; i <= perSide; i++) {
+            const t = (i / perSide) * 100;
+            place(t, 2, (i % 3) * 0.4);      // top
+            place(t, 92, ((i + 1) % 3) * 0.4); // bottom
+        }
+        for (let i = 1; i < perSide; i++) {
+            const t = (i / perSide) * 100;
+            place(2, t, (i % 3) * 0.4);      // left
+            place(96, t, ((i + 1) % 3) * 0.4); // right
+        }
+    })();
+
+    // ======================================================================
+    //  SOUND (Tone.js)
+    // ======================================================================
     let soundsReady = false;
-    let clickSound, correctSound, booSound, powerupSound, battleHitSound, ticketSound;
+    let clickSound, correctSound, booSound, powerupSound, battleHitSound, ticketSound, winFanfare;
     function setupSounds() {
-        clickSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.01, release: 0.1 } }).toDestination();
-        const correctSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+        if (soundsReady) return;
+        clickSound = new Tone.Synth({ oscillator:{type:'sine'}, envelope:{attack:.01,decay:.1,sustain:.01,release:.1} }).toDestination();
+        const correctSynth = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:.01,decay:.2,sustain:.1,release:.2} }).toDestination();
         correctSound = { play: () => {
-            correctSynth.triggerAttackRelease('C5', '8n', Tone.now());
-            correctSynth.triggerAttackRelease('E5', '8n', Tone.now() + 0.1);
-            correctSynth.triggerAttackRelease('G5', '8n', Tone.now() + 0.2);
+            correctSynth.triggerAttackRelease('C5','8n', Tone.now());
+            correctSynth.triggerAttackRelease('E5','8n', Tone.now()+.1);
+            correctSynth.triggerAttackRelease('G5','8n', Tone.now()+.2);
         }};
-        const booSynth = new Tone.AMSynth({ harmonicity: 1.2, oscillator: { type: "sawtooth" }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.2, release: 0.5 }, modulation: { type: "sine" }, modulationEnvelope: { attack: 0.2, decay: 0.01, sustain: 1, release: 0.5 } }).toDestination();
-        booSound = { play: () => { booSynth.triggerAttackRelease("A2", "1n"); booSynth.triggerAttackRelease("G#2", "1n", "+0.1"); }};
-        powerupSound = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.3 } }).toDestination();
-        battleHitSound = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0 } }).toDestination();
-        ticketSound = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+        const booSynth = new Tone.AMSynth({ harmonicity:1.2, oscillator:{type:'sawtooth'}, envelope:{attack:.1,decay:.3,sustain:.2,release:.5}, modulation:{type:'sine'}, modulationEnvelope:{attack:.2,decay:.01,sustain:1,release:.5} }).toDestination();
+        booSound = { play: () => { booSynth.triggerAttackRelease('A2','2n'); } };
+        powerupSound = new Tone.Synth({ oscillator:{type:'sawtooth'}, envelope:{attack:.01,decay:.3,sustain:.2,release:.3} }).toDestination();
+        battleHitSound = new Tone.NoiseSynth({ noise:{type:'white'}, envelope:{attack:.005,decay:.05,sustain:0} }).toDestination();
+        ticketSound = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:.01,decay:.1,sustain:.1,release:.1} }).toDestination();
+        const fanfareSynth = new Tone.PolySynth(Tone.Synth).toDestination();
+        winFanfare = { play: () => {
+            const t = Tone.now();
+            fanfareSynth.triggerAttackRelease(['C4','E4','G4'], '8n', t);
+            fanfareSynth.triggerAttackRelease(['C4','E4','G4'], '8n', t+.18);
+            fanfareSynth.triggerAttackRelease(['C4','F4','A4'], '8n', t+.36);
+            fanfareSynth.triggerAttackRelease(['C4','E4','G4','C5'], '2n', t+.54);
+        }};
         soundsReady = true;
     }
+    function safePlay(fn) { try { fn(); } catch (e) { /* audio not ready */ } }
 
-    // --- Master Questions Data ---
-    const questions = [
-        { question: "The lion tamer cannot ______ the roaring lion into the ring.", options: ["bring", "take"], correct: 0, explanation: "'Bring' means to move something towards a location, while 'take' means to move something away. The lion tamer is moving the lion towards the ring." },
-        { question: "The clown's oversized shoes were very ______.", options: ["lose", "loose"], correct: 1, explanation: "'Loose' is an adjective meaning not tight. 'Lose' is a verb meaning to misplace something." },
-        { question: "The acrobat's performance had a profound ______ on the audience.", options: ["affect", "effect"], correct: 1, explanation: "'Effect' is a noun meaning a result or influence. 'Affect' is a verb meaning to impact or change." },
-        { question: "The ringmaster announced, 'And ______ we have the amazing trapeze artists!'", options: ["than", "then"], correct: 1, explanation: "'Then' refers to time or sequence. 'Than' is used for comparisons." },
-        { question: "The magician asked for a volunteer ______ he could make disappear.", options: ["who", "whom"], correct: 1, explanation: "Use 'whom' when it is the object of the verb. A simple trick: if you can replace it with 'him' or 'her', use 'whom'." },
-        { question: "The circus has arrived! ______ setting up the big top tent now.", options: ["Their", "There", "They're"], correct: 2, explanation: "'They're' is a contraction of 'they are'. 'Their' is possessive, and 'there' indicates a place." },
-        { question: "The strongman is much stronger ______ the juggler.", options: ["than", "then"], correct: 0, explanation: "'Than' is used for making comparisons. 'Then' indicates a sequence of events." },
-        { question: "______ going to be a fantastic show tonight!", options: ["It's", "Its"], correct: 0, explanation: "'It's' is a contraction for 'it is'. 'Its' is a possessive pronoun." },
-        { question: "The popcorn stand is over ______ by the Ferris wheel.", options: ["their", "there", "they're"], correct: 1, explanation: "'There' indicates a location. 'Their' is possessive, and 'they're' means 'they are'." },
-        { question: "The clown juggled ______ many balls for me to count.", options: ["to", "too", "two"], correct: 1, explanation: "'Too' means 'also' or 'excessively'. 'To' is a preposition, and 'two' is the number." },
-        { question: `"Is that ______ unicycle?" the clown asked.`, options: ["Your", "You're"], correct: 0, explanation: "'Your' is possessive, showing ownership. 'You're' is a contraction of 'you are'." },
-        { question: "The acrobat must ______ down on the high wire to regain her balance.", options: ["lie", "lay"], correct: 0, explanation: "'Lie' means to recline. 'Lay' means to place something down and requires a direct object." },
-        { question: "Please ______ your cotton candy on the table before the ride.", options: ["sit", "set"], correct: 1, explanation: "'Set' means to place something. 'Sit' means to be seated. You 'set' the candy down." },
-        { question: "The circus traveled ______ this year than ever before.", options: ["farther", "further"], correct: 0, explanation: "'Farther' refers to a physical distance. 'Further' refers to a metaphorical or figurative distance." },
-        { question: "There are ______ clowns in this car than in the last one.", options: ["fewer", "less"], correct: 0, explanation: "'Fewer' is used for countable items (clowns). 'Less' is used for uncountable quantities (less confetti)." },
-        { question: "Everyone ______ the ringmaster was amazed by the trick.", options: ["accept", "except"], correct: 1, explanation: "'Except' means 'not including'. 'Accept' means 'to receive'." },
-        { question: "The magician's trick was a clever optical ______.", options: ["allusion", "illusion"], correct: 1, explanation: "'Illusion' is a false perception or a magic trick. 'Allusion' is an indirect reference." },
-        { question: "The ringmaster's booming voice is a ______ to his commanding presence.", options: ["compliment", "complement"], correct: 1, explanation: "'Complement' means something that completes or goes well with something else. 'Compliment' is praise." },
-        { question: "The ______ of the circus is to entertain everyone.", options: ["principal", "principle"], correct: 1, explanation: "'Principle' is a fundamental rule or belief. 'Principal' can mean the head of a school or the main part of something." },
-        { question: "The contortionist could bend into 20 ______ shapes.", options: ["discreet", "discrete"], correct: 1, explanation: "'Discrete' means separate and distinct. 'Discreet' means careful or secretive." },
-        { question: "The unicycle remained ______ while the clown juggled.", options: ["stationary", "stationery"], correct: 0, explanation: "'Stationary' means not moving. 'Stationery' refers to writing materials." },
-        { question: "The parade will march right past the state ______ building.", options: ["capital", "capitol"], correct: 1, explanation: "'Capitol' refers to the building where lawmakers meet. 'Capital' refers to the city or wealth." },
-        { question: "The ringmaster tried to ______ a cheer from the quiet crowd.", options: ["elicit", "illicit"], correct: 0, explanation: "'Elicit' means to draw out a response. 'Illicit' means illegal." },
-        { question: "We ______ you that the tightrope walker is a trained professional.", options: ["assure", "ensure", "insure"], correct: 0, explanation: "'Assure' is to tell someone something positively to dispel any doubts. 'Ensure' is to make certain something will happen. 'Insure' is for financial protection." },
-        { question: "The clowns piled into the car ______.", options: ["altogether", "all together"], correct: 1, explanation: "'All together' means everyone in a group. 'Altogether' means completely or on the whole." },
-        { question: "Going to the circus is not an ______ occurrence for most people.", options: ["everyday", "every day"], correct: 0, explanation: "'Everyday' is an adjective that means common or ordinary. 'Every day' (two words) means each day." },
-        { question: "The crowd cheered ______ when the acrobat landed perfectly.", options: ["aloud", "allowed"], correct: 0, explanation: "'Aloud' means out loud. 'Allowed' means permitted." },
-        { question: "The veteran clown gave the rookie some good ______.", options: ["advice", "advise"], correct: 0, explanation: "'Advice' is a noun (a recommendation). 'Advise' is a verb (the act of giving a recommendation)." },
-        { question: "From the ringmaster's wink, I could ______ that my answer was correct.", options: ["imply", "infer"], correct: 1, explanation: "Speakers/writers 'imply' (hint). Listeners/readers 'infer' (deduce from evidence)." },
-        { question: "The juggler performed ______ for a clown who was feeling sick.", options: ["good", "well"], correct: 1, explanation: "'Well' is an adverb that describes how an action is performed. 'Good' is an adjective that describes a noun." }
-    ];
-
-    // --- Core Game Logic ---
-    function startGame(mode) {
-        if (!soundsReady) setupSounds();
-        Tone.start();
-        clickSound.triggerAttackRelease('C4', '8n');
-        
-        // --- Game Setup based on Mode ---
-        currentGameMode = mode;
-        const shuffled = [...questions].sort(() => 0.5 - Math.random());
-        if (mode === 'practice') {
-            gameQuestions = shuffled.slice(0, 10);
-        } else { // 'main'
-            gameQuestions = [...questions]; // Use all questions for main event
+    // ======================================================================
+    //  CONFETTI
+    // ======================================================================
+    function burstConfetti(amount) {
+        if (reduceMotion) return;
+        const colors = ['#C21E28','#F4B41A','#14868C','#E23744','#2f9e44','#FBF1DC'];
+        for (let i = 0; i < amount; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.background = colors[Math.floor(Math.random() * colors.length)];
+            const dur = 1.6 + Math.random() * 1.4;
+            c.style.animationDuration = dur + 's';
+            c.style.transform = `translateX(${(Math.random()*2-1)*40}px)`;
+            confettiLayer.appendChild(c);
+            setTimeout(() => c.remove(), dur * 1000 + 100);
         }
-        
-        // --- Reset State ---
+    }
+
+    function reactMascot(el, ok) {
+        if (!el) return;
+        el.classList.remove('happy','sad');
+        void el.offsetWidth; // restart animation
+        el.classList.add(ok ? 'happy' : 'sad');
+    }
+
+    // ======================================================================
+    //  QUESTION SELECTION
+    // ======================================================================
+    function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    const REPLAY_CAP = 25;
+    function buildQuestionSet(mode, difficulty, ids) {
+        if (mode === 'replay') {
+            const wanted = Array.isArray(ids) ? ids : [];
+            const set = wanted
+                .map(id => QUESTIONS.find(q => q.id === id))
+                .filter(Boolean);
+            return shuffle(set).slice(0, REPLAY_CAP);
+        }
+        if (mode === 'practice') {
+            let pool = QUESTIONS;
+            if (difficulty) pool = QUESTIONS.filter(q => q.level === difficulty);
+            if (pool.length === 0) pool = QUESTIONS;
+            return shuffle(pool).slice(0, Math.min(PRACTICE_COUNT, pool.length));
+        }
+        // main event: balanced spread across difficulties, then shuffle
+        let set = [];
+        for (const lvl of [1, 2, 3]) {
+            const byLevel = shuffle(QUESTIONS.filter(q => q.level === lvl));
+            set = set.concat(byLevel.slice(0, MAIN_SPREAD[lvl]));
+        }
+        // top up if any level was short
+        if (set.length < MAIN_COUNT) {
+            const remaining = shuffle(QUESTIONS.filter(q => !set.includes(q)));
+            set = set.concat(remaining.slice(0, MAIN_COUNT - set.length));
+        }
+        return shuffle(set).slice(0, MAIN_COUNT);
+    }
+
+    // ======================================================================
+    //  CORE FLOW
+    // ======================================================================
+    function startGame(mode, ids) {
+        setupSounds();
+        if (Tone.context.state !== 'running') Tone.start();
+        safePlay(() => clickSound.triggerAttackRelease('C4','8n'));
+
+        const set = buildQuestionSet(mode, selectedDifficulty, ids);
+        if (mode === 'replay' && set.length === 0) return; // nothing to replay
+
+        currentGameMode = mode;
+        gameQuestions = set;
+
         score = 0;
         currentQuestionIndex = 0;
         consecutiveCorrect = 0;
-        clueCoins = 1;
+        bestStreak = 0;
+        clueCoins = 1 + (prizes.upgrades.extraClue || 0);
         cheerLevel = 0;
+        correctCount = 0;
         wrongAnswers = [];
-        
-        // --- UI Transitions ---
-        startScreen.classList.add('hidden');
-        prizeWallScreen.classList.add('hidden');
-        endScreen.classList.add('hidden');
-        bossScreen.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
+
+        showOnly(gameScreen);
         homeButton.classList.remove('hidden');
-        
         updateUI();
         displayQuestion();
     }
@@ -438,212 +1259,325 @@ document.addEventListener('DOMContentLoaded', () => {
         questionNumberEl.textContent = currentQuestionIndex + 1;
         totalQuestionsEl.textContent = gameQuestions.length;
         clueCoinsEl.textContent = clueCoins;
-        clueCoinButton.disabled = clueCoins <= 0;
+        clueCoinButton.disabled = clueCoins <= 0 || answeredThisQuestion;
+        streakCount.textContent = consecutiveCorrect;
+        streakBadge.style.visibility = consecutiveCorrect >= 2 ? 'visible' : 'hidden';
+        progressFill.style.width = ((currentQuestionIndex) / gameQuestions.length) * 100 + '%';
         updateCheerMeter();
     }
 
     function updateCheerMeter() {
-        const percentage = (cheerLevel / gameQuestions.length) * 100;
-        cheerMeterFill.style.height = `${percentage}%`;
-        if (percentage > 80) cheerMeterFill.style.backgroundColor = '#22c55e';
-        else if (percentage > 50) cheerMeterFill.style.backgroundColor = '#f59e0b';
+        const pct = (cheerLevel / gameQuestions.length) * 100;
+        cheerMeterFill.style.height = pct + '%';
+        if (pct > 80) cheerMeterFill.style.backgroundColor = '#22c55e';
+        else if (pct > 50) cheerMeterFill.style.backgroundColor = '#f59e0b';
         else cheerMeterFill.style.backgroundColor = '#facc15';
     }
 
     function displayQuestion() {
-        const question = gameQuestions[currentQuestionIndex];
-        const blank = `<span class="inline-block bg-gray-200 rounded-md px-4 py-1 border-b-2 border-gray-400 mx-1">______</span>`;
-        questionTextEl.innerHTML = question.question.replace('______', blank);
-        
-        optionsContainer.innerHTML = '';
-        const shuffledOptions = question.options.map((option, index) => ({ text: option, originalIndex: index })).sort(() => Math.random() - 0.5);
+        answeredThisQuestion = false;
+        const q = gameQuestions[currentQuestionIndex];
 
-        shuffledOptions.forEach(option => {
+        pairTag.textContent = q.pair + '  ' + '★'.repeat(q.level);
+
+        const blank = `<span class="blank-slot">?</span>`;
+        questionTextEl.innerHTML = q.question.replace('______', blank);
+
+        questionPoster.classList.remove('enter');
+        void questionPoster.offsetWidth;
+        if (!reduceMotion) questionPoster.classList.add('enter');
+
+        optionsContainer.innerHTML = '';
+        const shuffled = q.options
+            .map((opt, index) => ({ text: opt, originalIndex: index }))
+            .sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((opt, displayIdx) => {
             const button = document.createElement('button');
-            button.textContent = option.text;
-            button.dataset.index = option.originalIndex;
-            button.className = "w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-lg text-lg shadow-md transition-transform hover:scale-105";
-            button.addEventListener('click', () => selectAnswer(parseInt(button.dataset.index), option.text));
+            button.className = 'option-btn';
+            button.dataset.index = opt.originalIndex;
+            button.innerHTML = `<span class="key-cap">${displayIdx + 1}</span><span>${opt.text}</span>`;
+            button.setAttribute('aria-label', `Option ${displayIdx + 1}: ${opt.text}`);
+            button.addEventListener('click', () => selectAnswer(opt.originalIndex, opt.text, button));
             optionsContainer.appendChild(button);
         });
         updateUI();
     }
 
-    function selectAnswer(selectedIndex, selectedText) {
-        if (!soundsReady) return;
-        
-        const question = gameQuestions[currentQuestionIndex];
-        const isCorrect = selectedIndex === question.correct;
-        
+    function selectAnswer(selectedIndex, selectedText, buttonEl) {
+        if (answeredThisQuestion) return;
+        answeredThisQuestion = true;
+
+        const q = gameQuestions[currentQuestionIndex];
+        const isCorrect = selectedIndex === q.correct;
+
+        // lock & reveal every option
+        Array.from(optionsContainer.children).forEach(btn => {
+            btn.disabled = true;
+            const idx = parseInt(btn.dataset.index, 10);
+            if (idx === q.correct) btn.classList.add('correct');
+            else if (btn === buttonEl) btn.classList.add('wrong');
+        });
+        clueCoinButton.disabled = true;
+
         if (isCorrect) {
-            correctSound.play();
+            safePlay(() => correctSound.play());
             score += 10;
             cheerLevel++;
+            correctCount++;
             consecutiveCorrect++;
-            if (consecutiveCorrect > 0 && consecutiveCorrect % 8 === 0) {
+            bestStreak = Math.max(bestStreak, consecutiveCorrect);
+            streakBadge.classList.remove('pulse'); void streakBadge.offsetWidth; streakBadge.classList.add('pulse');
+            burstConfetti(consecutiveCorrect >= 5 ? 45 : 22);
+            if (consecutiveCorrect > 0 && consecutiveCorrect % CLUE_EVERY === 0) {
                 clueCoins++;
-                powerupSound.triggerAttackRelease('A5', '8n');
+                safePlay(() => powerupSound.triggerAttackRelease('A5','8n'));
             }
+            // Getting a tricky word right anywhere retires it from the practice bank.
+            clearMiss(q.id);
         } else {
-            booSound.play();
+            safePlay(() => booSound.play());
             consecutiveCorrect = 0;
             wrongAnswers.push({
-                question: question.question,
+                id: q.id,
+                pair: q.pair,
+                question: q.question,
                 yourAnswer: selectedText,
-                correctAnswer: question.options[question.correct]
+                correctAnswer: q.options[q.correct],
+                explanation: q.explanation
             });
+            addMiss(q.id);
         }
-        
+
         showFeedback(isCorrect);
         updateUI();
     }
 
     function showFeedback(isCorrect) {
-        const question = gameQuestions[currentQuestionIndex];
-        modalTitle.textContent = isCorrect ? 'Correct!' : 'Not Quite!';
-        modalTitle.className = `text-3xl font-bold mb-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}`;
-        modalExplanation.textContent = question.explanation;
-        
-        const isLastQuestion = currentQuestionIndex >= gameQuestions.length - 1;
-        if (isLastQuestion) {
-            nextQuestionButton.textContent = currentGameMode === 'main' ? 'Go to Final Battle!' : 'See Results';
-        } else {
-            nextQuestionButton.textContent = 'Next Question';
-        }
+        const q = gameQuestions[currentQuestionIndex];
+        modalTitle.textContent = isCorrect ? 'Bravo! Correct!' : 'Not Quite — Watch This!';
+        modalTitle.style.color = isCorrect ? '#2f9e44' : 'var(--tent-red)';
+        modalExplanation.textContent = q.explanation;
+        // The Ringmaster hosts every answer and always shares a spelling trick.
+        modalTip.textContent = TIPS[q.pair] || 'Say each word in a full sentence and pick the one that fits!';
+        modalMascot.textContent = '🎩';
+        reactMascot(modalMascot, isCorrect);
+
+        const isLast = currentQuestionIndex >= gameQuestions.length - 1;
+        nextQuestionButton.textContent = isLast
+            ? (currentGameMode === 'main' ? 'Go to Final Battle! ⚔️' : 'See Results 🎉')
+            : 'Next Question →';
 
         modalOverlay.classList.remove('hidden');
-        feedbackModalContent.classList.remove('hidden');
-        setTimeout(() => feedbackModalContent.classList.add('scale-100'), 10);
+        requestAnimationFrame(() => {
+            modalOverlay.classList.remove('opacity-0');
+            feedbackModalContent.classList.add('show');
+        });
+        nextQuestionButton.focus();
     }
-    
-    function hideModals() {
-        feedbackModalContent.classList.remove('scale-100');
-        setTimeout(() => modalOverlay.classList.add('hidden'), 300);
+
+    function hideModal() {
+        feedbackModalContent.classList.remove('show');
+        modalOverlay.classList.add('opacity-0');
+        setTimeout(() => modalOverlay.classList.add('hidden'), 260);
     }
 
     function advanceGame() {
-        hideModals();
+        hideModal();
         currentQuestionIndex++;
         if (currentQuestionIndex < gameQuestions.length) {
             displayQuestion();
+        } else if (currentGameMode === 'main') {
+            startBossBattle();
         } else {
-            if (currentGameMode === 'main') {
-                startBossBattle();
-            } else {
-                endGame(true); // Practice mode always "wins" as there's no boss
-            }
+            endGame(true);
         }
     }
-    
+
     function useClueCoin() {
-        if (clueCoins > 0) {
-            powerupSound.triggerAttackRelease('E4', '8n');
-            clueCoins--;
-            const question = gameQuestions[currentQuestionIndex];
-            const incorrectOptions = Array.from(optionsContainer.children).filter(btn => parseInt(btn.dataset.index) !== question.correct);
-            if (incorrectOptions.length > 0) {
-                const optionToDisable = incorrectOptions[Math.floor(Math.random() * incorrectOptions.length)];
-                optionToDisable.disabled = true;
-                optionToDisable.classList.add('bg-gray-400', 'line-through', 'cursor-not-allowed');
-                optionToDisable.classList.remove('hover:bg-red-600');
-            }
-            updateUI();
+        if (clueCoins <= 0 || answeredThisQuestion) return;
+        safePlay(() => powerupSound.triggerAttackRelease('E4','8n'));
+        clueCoins--;
+        const q = gameQuestions[currentQuestionIndex];
+        const wrongBtns = Array.from(optionsContainer.children)
+            .filter(btn => parseInt(btn.dataset.index, 10) !== q.correct && !btn.classList.contains('eliminated'));
+        if (wrongBtns.length > 0) {
+            const victim = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
+            victim.disabled = true;
+            victim.classList.add('eliminated');
         }
+        updateUI();
     }
-    
-    // --- Boss Battle & End Game ---
+
+    // ======================================================================
+    //  BOSS BATTLE  (skill-based & winnable)
+    // ======================================================================
     function startBossBattle() {
-        gameScreen.classList.add('hidden');
-        bossScreen.classList.remove('hidden');
-        
-        bossEmojiEl.textContent = prizes.selectedBoss;
-        const maxScore = gameQuestions.length * 10;
-        const bossHP = maxScore - 1;
-        
-        playerPowerEl.textContent = score;
-        bossHealthEl.textContent = bossHP;
-        playerHealthBar.style.width = `${(score / maxScore) * 100}%`;
-        bossHealthBar.style.width = `100%`;
-        
-        animateBossBattle(score, bossHP, maxScore);
+        showOnly(bossScreen);
+        homeButton.classList.add('hidden');
+
+        const boss = ALL_BOSSES.find(b => b.emoji === prizes.selectedBoss) || ALL_BOSSES[0];
+        bossEmojiEl.textContent = boss.emoji;
+        bossTagline.textContent = boss.taunt;
+
+        const accuracy = gameQuestions.length ? correctCount / gameQuestions.length : 0;
+
+        // Damage per round scales with accuracy. Player wins when accuracy >= threshold.
+        const playerDmg = 7 + 20 * accuracy;                 // higher accuracy -> hits harder
+        const bossDmg   = 7 + 20 * (BOSS_WIN_ACCURACY * 2 - accuracy) * 0.5 + 3 * (1 - accuracy);
+        const playerWins = accuracy >= BOSS_WIN_ACCURACY;
+
+        animateBattle(playerDmg, Math.max(4, bossDmg), playerWins, boss);
     }
-    
-    function animateBossBattle(playerStart, bossStart, maxScore) {
-        const duration = 5000;
-        let startTime = null;
-        let animationFrameId;
 
-        function animationStep(timestamp) {
-            if (!startTime) startTime = timestamp;
-            const progress = Math.min((timestamp - startTime) / duration, 1);
-            const playerCurrent = playerStart - (playerStart * progress);
-            const bossCurrent = bossStart - (bossStart * progress);
+    function spawnProjectile(fromLeft, emoji) {
+        if (reduceMotion) return;
+        const p = document.createElement('div');
+        p.className = 'projectile';
+        p.textContent = emoji;
+        p.style.top = '38%';
+        p.style.left = fromLeft ? '22%' : '72%';
+        battleArena.appendChild(p);
+        const dx = fromLeft ? 220 : -220;
+        p.animate(
+            [ { transform:'translateX(0) scale(.6)', opacity:1 },
+              { transform:`translateX(${dx}px) scale(1.1)`, opacity:0 } ],
+            { duration: 420, easing: 'ease-in' }
+        );
+        setTimeout(() => p.remove(), 440);
+    }
 
-            playerPowerEl.textContent = Math.ceil(playerCurrent);
-            bossHealthEl.textContent = Math.ceil(bossCurrent);
-            playerHealthBar.style.width = `${(playerCurrent / maxScore) * 100}%`;
-            bossHealthBar.style.width = `${(bossCurrent / (bossStart || 1)) * 100}%`;
+    function animateBattle(playerDmg, bossDmg, playerWins, boss) {
+        let playerHP = 100, bossHP = 100;
+        let round = 0;
+        battleLog.textContent = 'The crowd holds its breath...';
 
-            if (Math.random() > 0.7) {
-                battleHitSound.triggerAttackRelease("8n");
-                bossScreen.querySelector('#battle-arena').classList.add('shake');
-                createTear();
-                setTimeout(() => bossScreen.querySelector('#battle-arena').classList.remove('shake'), 200);
-            }
+        const tick = () => {
+            round++;
+            // Player attacks the boss
+            spawnProjectile(true, '💥');
+            bossHP = Math.max(0, bossHP - playerDmg * (0.9 + Math.random() * 0.2));
+            bossHealthBar.style.width = bossHP + '%';
+            bossHealthEl.textContent = Math.ceil(bossHP);
+            bossEmojiEl.classList.remove('hit'); void bossEmojiEl.offsetWidth; bossEmojiEl.classList.add('hit');
+            safePlay(() => battleHitSound.triggerAttackRelease('8n'));
 
-            if (progress < 1) {
-                animationFrameId = requestAnimationFrame(animationStep);
+            // Boss counter-attacks
+            setTimeout(() => {
+                if (bossHP <= 0) return; // boss already down, no counter
+                spawnProjectile(false, '💧');
+                playerHP = Math.max(0, playerHP - bossDmg * (0.9 + Math.random() * 0.2));
+                playerHealthBar.style.width = playerHP + '%';
+                playerPowerEl.textContent = Math.ceil(playerHP);
+                playerChampEl.classList.remove('hit'); void playerChampEl.offsetWidth; playerChampEl.classList.add('hit');
+            }, 220);
+
+            const finished =
+                (playerWins && bossHP <= 0) ||
+                (!playerWins && playerHP <= 0) ||
+                round > 20;
+
+            if (!finished) {
+                setTimeout(tick, 620);
             } else {
-                const playerWon = score > bossStart;
-                setTimeout(() => endGame(playerWon), 500);
+                // Snap the loser's bar to empty so the visual matches the outcome
+                if (playerWins) { bossHP = 0; bossHealthBar.style.width = '0%'; bossHealthEl.textContent = '0'; }
+                else            { playerHP = 0; playerHealthBar.style.width = '0%'; playerPowerEl.textContent = '0'; }
+                battleLog.textContent = playerWins ? 'The boss is defeated!' : 'The boss overwhelms you...';
+                setTimeout(() => endGame(playerWins), 900);
             }
-        }
-        animationFrameId = requestAnimationFrame(animationStep);
+        };
+        setTimeout(tick, 700);
     }
-    
-    function createTear() {
-        const tear = document.createElement('div');
-        tear.className = 'tear';
-        const side = Math.random() > 0.5 ? 'left' : 'right';
-        tear.style.left = side === 'left' ? `${38 + Math.random() * 5}%` : `${57 + Math.random() * 5}%`;
-        tear.style.top = `${40 + Math.random() * 5}%`;
-        tearContainer.appendChild(tear);
-        setTimeout(() => tear.remove(), 1000);
-    }
-    
+
+    // ======================================================================
+    //  END GAME
+    // ======================================================================
     function endGame(playerWon) {
-        bossScreen.classList.add('hidden');
-        endScreen.classList.remove('hidden');
-        homeButton.classList.add('hidden'); 
-        
-        const ticketsEarned = cheerLevel;
+        showOnly(endScreen);
+        homeButton.classList.add('hidden');
+
+        const total = gameQuestions.length;
+        const accuracy = total ? Math.round((correctCount / total) * 100) : 0;
+
+        // Tickets: one per correct answer, plus a boss-win bonus, plus a streak bonus.
+        let ticketsEarned = cheerLevel + (bestStreak >= 5 ? 3 : 0);
+        if (currentGameMode === 'main' && playerWon) ticketsEarned += 10;
         tickets += ticketsEarned;
-        localStorage.setItem('circusTickets', tickets.toString());
-        
+        safeStorage.set('circusTickets', tickets.toString());
+
         ticketsEarnedEl.textContent = ticketsEarned;
-        if(ticketsEarned > 0) ticketSound.triggerAttackRelease('G5', '8n');
+        if (ticketsEarned > 0) safePlay(() => ticketSound.triggerAttackRelease('G5','8n'));
 
         if (currentGameMode === 'main') {
-             if (playerWon) {
-                endTitle.textContent = "Congratulations!";
-                endTitle.className = 'font-circus text-5xl md:text-7xl text-yellow-500 drop-shadow-lg mb-4';
-                endMessage.textContent = "You've conquered the circus of confused words!";
+            if (playerWon) {
+                endTitle.textContent = 'You Win the Big Top!';
+                endTitle.style.color = 'var(--gold-deep)';
+                endMessage.textContent = "You conquered the boss and the confusing words alike!";
+                endMascot.textContent = '🏆';
+                safePlay(() => winFanfare.play());
+                burstConfetti(80);
             } else {
-                endTitle.textContent = "You Were Defeated!";
-                endTitle.className = 'font-circus text-5xl md:text-7xl text-red-500 drop-shadow-lg mb-4';
-                endMessage.textContent = "The boss's tears were too much! Better luck next time.";
+                endTitle.textContent = 'Defeated... This Time';
+                endTitle.style.color = 'var(--tent-red)';
+                endMessage.textContent = 'The boss got the best of you. Review your misses and try again!';
+                endMascot.textContent = '😢';
             }
-        } else { // Practice Mode
-             endTitle.textContent = "Practice Complete!";
-             endTitle.className = 'font-circus text-5xl md:text-7xl text-green-600 drop-shadow-lg mb-4';
-             endMessage.textContent = "Great job honing your skills!";
+        } else if (currentGameMode === 'replay') {
+            const cleared = total - wrongAnswers.length;
+            if (wrongAnswers.length === 0) {
+                endTitle.textContent = 'Tricky Words Tamed!';
+                endTitle.style.color = 'var(--gold-deep)';
+                endMessage.textContent = `You nailed all ${total} of your trouble words. The ringmaster tips his hat!`;
+                endMascot.textContent = '🎩';
+                safePlay(() => winFanfare.play());
+                burstConfetti(70);
+            } else {
+                endTitle.textContent = 'Redemption Round Complete!';
+                endTitle.style.color = '#2f9e44';
+                endMessage.textContent = `You retired ${cleared} tricky word${cleared === 1 ? '' : 's'} from your practice list. ${wrongAnswers.length} still need another lap around the ring.`;
+                endMascot.textContent = '🎪';
+                if (accuracy >= 80) burstConfetti(50);
+            }
+        } else {
+            endTitle.textContent = 'Practice Complete!';
+            endTitle.style.color = '#2f9e44';
+            endMessage.textContent = 'Great job honing your word skills!';
+            endMascot.textContent = '🎪';
+            if (accuracy >= 80) { safePlay(() => winFanfare.play()); burstConfetti(60); }
         }
-       
-        finalScoreEl.textContent = `${score} / ${gameQuestions.length * 10}`;
+        reactMascot(endMascot, playerWon);
 
-        if (wrongAnswers.length > 0) reviewButton.classList.remove('hidden');
-        else reviewButton.classList.add('hidden');
-        
+        finalScoreEl.textContent = `${score} / ${total * 10}`;
+        finalAccuracyEl.textContent = accuracy + '%';
+
+        // best score tracking (replay rounds don't set personal bests)
+        let noteText = '';
+        if (currentGameMode !== 'replay') {
+            const key = currentGameMode === 'main' ? 'bestMain' : 'bestPractice';
+            const prevBest = stats[key] || 0;
+            if (score > prevBest) {
+                stats[key] = score;
+                noteText = '🎉 New personal best!';
+            } else if (prevBest > 0) {
+                noteText = `Your best in this mode: ${prevBest}`;
+            }
+        } else if (missBank.length > 0) {
+            noteText = `🎪 Tricky Words still in the ring: ${missBank.length}`;
+        }
+        stats.played = (stats.played || 0) + 1;
+        safeStorage.set('circusStats', JSON.stringify(stats));
+        bestNoteEl.textContent = noteText;
+
+        reviewButton.classList.toggle('hidden', wrongAnswers.length === 0);
+        // Redemption Round: retry the words you just missed (this session)
+        sessionMissIds = wrongAnswers.map(w => w.id).filter(id => Number.isInteger(id));
+        redemptionButton.classList.toggle('hidden', sessionMissIds.length === 0);
+        if (sessionMissIds.length > 0) {
+            redemptionButton.textContent = `🔁 Redemption Round (${sessionMissIds.length})`;
+        }
+        // In replay mode, "Play Again" should re-run the remaining tricky bank, not a stale set.
+        playAgainButton.classList.toggle('hidden', currentGameMode === 'replay');
         endScoreView.classList.remove('hidden');
         endReviewView.classList.add('hidden');
     }
@@ -652,9 +1586,16 @@ document.addEventListener('DOMContentLoaded', () => {
         reviewContainer.innerHTML = '';
         wrongAnswers.forEach(item => {
             const div = document.createElement('div');
-            div.className = 'p-3 bg-white rounded shadow';
-            const qText = item.question.replace('______', `<strong class="text-red-600">"${item.yourAnswer}"</strong>`);
-            div.innerHTML = `<p class="font-semibold">${qText}</p><p class="text-sm text-green-600">Correct Answer: ${item.correctAnswer}</p>`;
+            div.className = 'p-3 rounded-lg';
+            div.style.background = '#fff';
+            div.style.border = '2px solid var(--ink)';
+            const qText = item.question.replace('______',
+                `<strong style="color:var(--tent-red)">"${item.yourAnswer}"</strong>`);
+            div.innerHTML =
+                `<p class="text-xs font-ui mb-1" style="color:var(--teal)">${item.pair}</p>
+                 <p class="font-ui">${qText}</p>
+                 <p class="text-sm mt-1" style="color:#2f9e44"><strong>Correct:</strong> ${item.correctAnswer}</p>
+                 <p class="text-sm mt-1" style="color:var(--ink)">${item.explanation}</p>`;
             reviewContainer.appendChild(div);
         });
         endScoreView.classList.add('hidden');
@@ -666,93 +1607,174 @@ document.addEventListener('DOMContentLoaded', () => {
         endScoreView.classList.remove('hidden');
     }
 
-    function showMainMenu() {
-        gameScreen.classList.add('hidden');
-        endScreen.classList.add('hidden');
-        prizeWallScreen.classList.add('hidden');
-        startScreen.classList.remove('hidden');
-        homeButton.classList.add('hidden');
+    // ======================================================================
+    //  SCREEN MANAGEMENT
+    // ======================================================================
+    function showOnly(section) {
+        [startScreen, gameScreen, bossScreen, endScreen, prizeWallScreen].forEach(s => s.classList.add('hidden'));
+        section.classList.remove('hidden');
     }
 
-    // --- Prize Wall Logic ---
+    function showMainMenu() {
+        showOnly(startScreen);
+        homeButton.classList.add('hidden');
+        refreshTrickyButton();
+        reactMascot(startMascot, true);
+    }
+
+    function refreshTrickyButton() {
+        const n = missBank.length;
+        trickyCountBadge.textContent = n;
+        trickyWordsButton.classList.toggle('hidden', n === 0);
+        trickyHint.classList.toggle('hidden', n === 0);
+    }
+
+    // ======================================================================
+    //  PRIZE WALL
+    // ======================================================================
     function showPrizeWall() {
-        startScreen.classList.add('hidden');
-        prizeWallScreen.classList.remove('hidden');
+        setupSounds();
+        showOnly(prizeWallScreen);
         homeButton.classList.remove('hidden');
         renderPrizes();
     }
 
     function renderPrizes() {
         ticketCounterEl.textContent = tickets;
-        prizeContainer.innerHTML = '';
 
+        // Progress + spotlight on the selected challenger
+        const unlockedCount = ALL_BOSSES.filter(b => prizes.unlockedBosses.includes(b.emoji)).length;
+        recruitProgress.textContent = `${unlockedCount} / ${ALL_BOSSES.length}`;
+        const chosen = ALL_BOSSES.find(b => b.emoji === prizes.selectedBoss) || ALL_BOSSES[0];
+        spotlightEmoji.textContent = chosen.emoji;
+        spotlightName.textContent = chosen.name;
+        spotlightTaunt.textContent = `“${chosen.taunt}”`;
+
+        // Performer cards
+        prizeContainer.innerHTML = '';
         ALL_BOSSES.forEach(boss => {
             const isUnlocked = prizes.unlockedBosses.includes(boss.emoji);
             const isSelected = prizes.selectedBoss === boss.emoji;
-            
-            const prizeDiv = document.createElement('div');
-            prizeDiv.className = 'p-4 border-2 rounded-lg flex flex-col items-center justify-between';
-            prizeDiv.innerHTML = `
-                <div class="text-6xl mb-2">${boss.emoji}</div>
-                <div class="font-bold text-lg">${boss.name}</div>
-            `;
+            const canAfford = tickets >= boss.cost;
+
+            const card = document.createElement('div');
+            card.className = 'prize-card p-4 flex flex-col items-center justify-between text-center'
+                + (isUnlocked ? '' : ' locked')
+                + (isSelected ? ' selected' : '')
+                + (!isUnlocked && canAfford ? ' affordable' : '');
+            card.innerHTML =
+                (isSelected ? `<span class="now-tag">In the ring</span>` : '')
+                + (!isUnlocked ? `<span class="lock-badge">🔒</span>` : '')
+                + `<div class="text-6xl mb-1">${boss.emoji}</div>
+                   <div class="font-ui font-bold" style="color:var(--ink)">${boss.name}</div>
+                   <div class="prize-tagline">${boss.blurb}</div>`;
 
             const button = document.createElement('button');
-            button.className = 'w-full mt-2 font-bold py-2 px-4 rounded-lg text-white transition-transform hover:scale-105';
-
+            button.className = 'btn w-full mt-3 py-2 px-3 text-sm';
             if (isSelected) {
-                button.textContent = 'Selected';
+                button.textContent = '✓ Selected';
                 button.disabled = true;
-                button.className += ' bg-yellow-500 cursor-not-allowed';
-                prizeDiv.classList.add('border-yellow-500', 'bg-yellow-50');
+                button.classList.add('btn-gold');
             } else if (isUnlocked) {
-                button.textContent = 'Select';
-                button.className += ' bg-green-500 hover:bg-green-600';
+                button.textContent = 'Send to Ring';
+                button.classList.add('btn-green');
                 button.onclick = () => selectPrize(boss.emoji);
-                prizeDiv.classList.add('border-green-500');
             } else {
-                button.innerHTML = `Buy <span class="font-normal">(${boss.cost} 🎟️)</span>`;
-                if (tickets >= boss.cost) {
-                    button.className += ' bg-blue-500 hover:bg-blue-600';
+                button.innerHTML = `Recruit · ${boss.cost} 🎟️`;
+                if (canAfford) {
+                    button.classList.add('btn-blue');
                     button.onclick = () => buyPrize(boss.emoji, boss.cost);
                 } else {
-                    button.className += ' bg-gray-400 cursor-not-allowed';
+                    button.classList.add('btn-ink');
                     button.disabled = true;
                 }
-                 prizeDiv.classList.add('border-gray-400', 'bg-gray-50');
             }
+            card.appendChild(button);
+            prizeContainer.appendChild(card);
+        });
 
-            prizeDiv.appendChild(button);
-            prizeContainer.appendChild(prizeDiv);
+        // Ringside upgrades
+        upgradeContainer.innerHTML = '';
+        UPGRADES.forEach(up => {
+            const level = prizes.upgrades[up.id] || 0;
+            const maxed = level >= up.max;
+            const nextCost = maxed ? null : up.costs[level];
+            const canAfford = !maxed && tickets >= nextCost;
+
+            const card = document.createElement('div');
+            card.className = 'upgrade-card' + (maxed ? ' maxed' : '');
+            card.innerHTML =
+                `<div class="up-emoji">${up.emoji}</div>
+                 <div class="flex-grow">
+                   <div class="up-title">${up.title} <span style="color:var(--tent-red)">Lv ${level}/${up.max}</span></div>
+                   <div class="up-desc">${up.desc}</div>
+                 </div>`;
+
+            const button = document.createElement('button');
+            button.className = 'btn py-2 px-4 text-sm whitespace-nowrap';
+            if (maxed) {
+                button.textContent = 'Maxed ✓';
+                button.disabled = true;
+                button.classList.add('btn-gold');
+            } else {
+                button.innerHTML = `${nextCost} 🎟️`;
+                if (canAfford) {
+                    button.classList.add('btn-green');
+                    button.onclick = () => buyUpgrade(up.id, nextCost);
+                } else {
+                    button.classList.add('btn-ink');
+                    button.disabled = true;
+                }
+            }
+            card.appendChild(button);
+            upgradeContainer.appendChild(card);
         });
     }
 
     function buyPrize(emoji, cost) {
-        if (tickets >= cost) {
-            tickets -= cost;
-            prizes.unlockedBosses.push(emoji);
-            prizes.selectedBoss = emoji; // Auto-select on buy
-            
-            localStorage.setItem('circusTickets', tickets.toString());
-            localStorage.setItem('circusPrizes', JSON.stringify(prizes));
-            
-            clickSound.triggerAttackRelease('C5', '8n');
-            renderPrizes();
-        }
+        if (tickets < cost) return;
+        tickets -= cost;
+        prizes.unlockedBosses.push(emoji);
+        prizes.selectedBoss = emoji;
+        safeStorage.set('circusTickets', tickets.toString());
+        safeStorage.set('circusPrizes', JSON.stringify(prizes));
+        safePlay(() => { setupSounds(); clickSound.triggerAttackRelease('C5','8n'); });
+        burstConfetti(40);
+        renderPrizes();
     }
 
     function selectPrize(emoji) {
         prizes.selectedBoss = emoji;
-        localStorage.setItem('circusPrizes', JSON.stringify(prizes));
-        clickSound.triggerAttackRelease('E4', '8n');
+        safeStorage.set('circusPrizes', JSON.stringify(prizes));
+        safePlay(() => { setupSounds(); clickSound.triggerAttackRelease('E4','8n'); });
         renderPrizes();
     }
 
+    function buyUpgrade(id, cost) {
+        const up = UPGRADES.find(u => u.id === id);
+        if (!up) return;
+        const level = prizes.upgrades[id] || 0;
+        if (level >= up.max || tickets < cost) return;
+        tickets -= cost;
+        prizes.upgrades[id] = level + 1;
+        safeStorage.set('circusTickets', tickets.toString());
+        safeStorage.set('circusPrizes', JSON.stringify(prizes));
+        safePlay(() => { setupSounds(); powerupSound.triggerAttackRelease('A5','8n'); });
+        burstConfetti(30);
+        renderPrizes();
+    }
 
-    // --- Event Listeners ---
+    // ======================================================================
+    //  EVENTS
+    // ======================================================================
     practiceButton.addEventListener('click', () => startGame('practice'));
     mainEventButton.addEventListener('click', () => startGame('main'));
-    playAgainButton.addEventListener('click', () => startGame(currentGameMode));
+    playAgainButton.addEventListener('click', () => {
+        if (currentGameMode === 'replay') startGame('replay', missBank.slice());
+        else startGame(currentGameMode || 'practice');
+    });
+    trickyWordsButton.addEventListener('click', () => startGame('replay', missBank.slice()));
+    redemptionButton.addEventListener('click', () => startGame('replay', sessionMissIds.slice()));
     mainMenuButton.addEventListener('click', showMainMenu);
     nextQuestionButton.addEventListener('click', advanceGame);
     clueCoinButton.addEventListener('click', useClueCoin);
@@ -761,19 +1783,41 @@ document.addEventListener('DOMContentLoaded', () => {
     prizeWallButton.addEventListener('click', showPrizeWall);
     backToMenuButton.addEventListener('click', showMainMenu);
     homeButton.addEventListener('click', showMainMenu);
-    
-    // Animation toggle
-    const toggleAnimationButton = document.getElementById('toggle-animation-button');
+
+    // Difficulty picker
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedDifficulty = parseInt(btn.dataset.diff, 10);
+        });
+    });
+
+    // Background motion toggle
     toggleAnimationButton.addEventListener('click', () => {
         document.body.classList.toggle('animation-paused');
-        const isPaused = document.body.classList.contains('animation-paused');
-        toggleAnimationButton.innerHTML = isPaused ? 'Play Background ▶️' : 'Pause Background ⏸️';
+        const paused = document.body.classList.contains('animation-paused');
+        toggleAnimationButton.innerHTML = paused ? '▶️ Motion' : '⏸️ Motion';
+        toggleAnimationButton.setAttribute('aria-pressed', String(paused));
     });
+
+    // Keyboard: 1-4 to answer, Enter/Space to advance when modal is open
+    document.addEventListener('keydown', (e) => {
+        const modalOpen = !modalOverlay.classList.contains('hidden');
+        if (modalOpen) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); advanceGame(); }
+            return;
+        }
+        if (gameScreen.classList.contains('hidden')) return;
+        if (['1','2','3','4'].includes(e.key)) {
+            const btn = optionsContainer.children[parseInt(e.key, 10) - 1];
+            if (btn && !btn.disabled) btn.click();
+        }
+    });
+
+    // Start on the main menu
+    showMainMenu();
 });
 </script>
-
 </body>
 </html>
-
-
-
